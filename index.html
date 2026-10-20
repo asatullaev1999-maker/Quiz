@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marmalade Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1e0b45; --card: #ffffff; --ink: #1f1640; --muted: #7a7096; --line: #ece8f5; --soft: #f6f3fc;
+    --brand: #7b2ff7; --brand-2: #f72fa0; --blue: #1368ce; --green: #22a35a; --red: #e21b3c;
+    --yellow: #e0a100; --teal: #0aa3a3; --violet: #864cbf; --radius: 22px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: 'Rubik', 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg);
+         padding: 24px 16px 40px; min-height: 100vh; position: relative; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1;
+    background: radial-gradient(circle at 0% 0%, rgba(247,47,160,.55), transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(47,184,247,.5), transparent 55%),
+                radial-gradient(circle at 70% 45%, rgba(255,204,0,.18), transparent 40%); }
+
+  .logo { text-align: center; margin: 0 0 18px; }
+  .logo-mark { display: inline-flex; align-items: center; gap: 10px; font-weight: 900; font-size: 30px; color: #fff; letter-spacing: -0.5px; }
+  .logo-mark .drop { width: 40px; height: 40px; border-radius: 14px; background: linear-gradient(135deg, #ff5fa2, #ffb800);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.15), 0 6px 16px rgba(247,47,160,.5); display: grid; place-items: center; font-size: 22px; }
+  .logo-sub { color: rgba(255,255,255,.7); font-size: 14px; margin-top: 4px; }
+
+  .card { max-width: 580px; margin: 0 auto; background: var(--card); padding: 28px; border-radius: var(--radius);
+          box-shadow: 0 20px 60px rgba(10,0,40,.45); }
+  @media (max-width: 480px) { .card { padding: 20px 16px; } }
+
+  h2, h3 { margin: 0 0 14px; }
+  h2 { font-size: 24px; font-weight: 900; text-align: center; }
+  .hint { color: var(--muted); font-size: 14px; text-align: center; margin: -6px 0 18px; }
+  label.field-label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+                      letter-spacing: .5px; margin: 14px 0 6px; }
+  input[type="text"], input[type="password"], select { width: 100%; padding: 14px 16px; margin: 0 0 10px;
+    border: 2px solid var(--line); border-radius: 14px; background: var(--soft); font: inherit; font-size: 16px; color: var(--ink); transition: .15s; }
+  input:focus, select:focus { outline: none; border-color: var(--brand); background: #fff; box-shadow: 0 0 0 4px rgba(123,47,247,.12); }
+
+  button { font: inherit; cursor: pointer; border: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .btn { width: 100%; padding: 15px; margin: 6px 0; border-radius: 14px; font-size: 16px; font-weight: 700; color: #fff;
+         box-shadow: 0 4px 0 rgba(0,0,0,.18); transition: transform .08s, box-shadow .08s, filter .15s;
+         display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn:disabled { opacity: .55; cursor: default; transform: none; }
+  .btn-main  { background: linear-gradient(135deg, var(--brand), #5a2fd6); }
+  .btn-green { background: linear-gradient(135deg, #2ccf6f, var(--green)); }
+  .btn-pink  { background: linear-gradient(135deg, var(--brand-2), #d01f7c); }
+  .btn-ghost { background: var(--soft); color: var(--ink); box-shadow: none; border: 2px solid var(--line); }
+  .btn-ghost:active { transform: translateY(1px); box-shadow: none; }
+  .btn-sm { padding: 10px 12px; font-size: 14px; width: auto; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+
+  .hidden { display: none !important; }
+  .screen { animation: pop .25s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .menu-actions { display: grid; gap: 10px; margin-top: 8px; }
+  .menu-tile { display: flex; align-items: center; gap: 14px; text-align: left; padding: 18px; border-radius: 18px; color: #fff;
+               font-weight: 700; font-size: 17px; box-shadow: 0 5px 0 rgba(0,0,0,.18); transition: transform .08s, box-shadow .08s; }
+  .menu-tile:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .menu-tile .ico { width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,.22); display: grid;
+                    place-items: center; font-size: 24px; flex-shrink: 0; }
+  .menu-tile small { display: block; font-weight: 400; opacity: .85; font-size: 13px; margin-top: 2px; }
+
+  .panel { background: var(--soft); border-radius: 16px; padding: 14px; margin: 12px 0; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .panel-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .pages-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .page-btn { width: 40px; height: 40px; border-radius: 12px; background: #fff; color: var(--ink); border: 2px solid var(--line); font-weight: 700; }
+  .page-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); box-shadow: 0 4px 12px rgba(123,47,247,.35); }
+  .page-btn.add { border-style: dashed; color: var(--brand); }
+  .q-head { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+  .q-head h3 { margin: 0; color: var(--brand); font-size: 20px; }
+  .link-danger { background: none; color: var(--red); font-size: 14px; font-weight: 500; padding: 4px; }
+  .link-muted { background: none; color: var(--muted); font-size: 14px; font-weight: 500; padding: 4px; text-decoration: underline; }
+
+  .image-status { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  .image-status.err { color: var(--red); }
+  .image-preview { margin-top: 10px; text-align: center; }
+  .image-preview img { max-width: 100%; max-height: 180px; border-radius: 12px; display: block; margin: 0 auto 6px; background: var(--line); }
+
+  .option-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+  .option-row .chip { width: 34px; height: 34px; border-radius: 10px; color: #fff; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; }
+  .option-row input[type="text"] { margin: 0; flex: 1; }
+  .correct-toggle { position: relative; flex-shrink: 0; }
+  .correct-toggle input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+  .correct-toggle span { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center;
+                         color: transparent; font-weight: 900; transition: .15s; background: #fff; }
+  .correct-toggle input:checked + span { background: var(--green); border-color: var(--green); color: #fff; }
+
+  .c-0 { background: var(--red); } .c-1 { background: var(--blue); } .c-2 { background: var(--yellow); }
+  .c-3 { background: var(--green); } .c-4 { background: var(--teal); } .c-5 { background: var(--violet); }
+
+  .room-code { text-align: center; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff;
+               border-radius: 16px; padding: 14px; margin: 14px 0; }
+  .room-code small { opacity: .8; font-size: 13px; }
+  .room-code div { font-size: 24px; font-weight: 900; word-break: break-word; }
+  .room-code .big-code { font-size: 52px; letter-spacing: 10px; line-height: 1.1; margin: 4px 0 2px; }
+  @media (max-width: 480px) { .room-code .big-code { font-size: 40px; letter-spacing: 6px; } }
+  .code-input { text-align: center; font-size: 34px !important; font-weight: 900; letter-spacing: 10px; padding: 16px !important; }
+  .status-badge { display: inline-block; margin-top: 8px; background: rgba(255,255,255,.22); padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+  .players { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; }
+  .player-tag { display: inline-flex; align-items: center; gap: 8px; background: var(--soft); padding: 6px 14px 6px 6px;
+                border-radius: 999px; font-weight: 500; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .wait { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); margin: 18px 0 6px; text-align: center; }
+  .dots span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); margin: 0 2px; animation: bounce 1s infinite; }
+  .dots span:nth-child(2) { animation-delay: .15s; } .dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity: .4; } 40% { transform: translateY(-6px); opacity: 1; } }
+  .empty { color: var(--muted); font-size: 14px; padding: 10px 0; }
+
+  .game-top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--muted); font-size: 14px; }
+  .score-pill { background: var(--soft); padding: 6px 12px; border-radius: 999px; color: var(--brand); }
+  .progress { height: 10px; background: var(--line); border-radius: 999px; overflow: hidden; margin: 10px 0 18px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .4s; }
+  #gameImageArea img { max-width: 100%; max-height: 220px; border-radius: 16px; display: block; margin: 0 auto 14px; }
+  .q-text { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 18px; line-height: 1.3; }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) { .options-grid { grid-template-columns: 1fr; } }
+  .option-btn { display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 14px; border-radius: 16px; color: #fff;
+                font-size: 17px; font-weight: 700; text-align: left; box-shadow: 0 5px 0 rgba(0,0,0,.2);
+                transition: transform .08s, box-shadow .08s, opacity .2s, filter .15s; }
+  .option-btn:hover { filter: brightness(1.08); }
+  .option-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .option-btn .shape { font-size: 22px; opacity: .9; flex-shrink: 0; }
+  .option-btn.dim { opacity: .3; }
+  .option-btn.right { outline: 4px solid #fff; box-shadow: 0 0 0 7px var(--green); }
+  .option-btn.wrong { outline: 4px solid #fff; box-shadow: 0 0 0 7px #222; }
+  .feedback { text-align: center; font-weight: 900; font-size: 20px; margin-top: 16px; min-height: 28px; }
+  .feedback.ok { color: var(--green); } .feedback.bad { color: var(--red); }
+  .feedback small { display: block; font-size: 15px; font-weight: 500; color: var(--muted); margin-top: 4px; }
+
+  /* таймер */
+  .timer-row { display: flex; align-items: center; gap: 12px; margin: -6px 0 16px; }
+  .timer-num { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+               font-size: 22px; font-weight: 900; color: #fff; background: var(--brand); transition: background .3s; }
+  .timer-track { flex: 1; height: 14px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .timer-track > div { height: 100%; width: 100%; background: linear-gradient(90deg, #2ccf6f, var(--green)); border-radius: 999px; }
+  .timer-row.warn .timer-num { background: var(--yellow); }
+  .timer-row.warn .timer-track > div { background: var(--yellow); }
+  .timer-row.danger .timer-num { background: var(--red); animation: pulse .5s infinite alternate; }
+  .timer-row.danger .timer-track > div { background: var(--red); }
+  @keyframes pulse { to { transform: scale(1.08); } }
+  .pts-badge { color: var(--brand); font-weight: 700; font-size: 14px; min-width: 64px; text-align: right; }
+  .time-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .time-row select { width: auto; flex: 1; min-width: 140px; margin: 0; }
+
+  /* QR-код */
+  .qr-box { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 14px; background: var(--soft); border-radius: 18px; }
+  .qr-img { width: 116px; height: 116px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 8px; display: grid; place-items: center; }
+  .qr-img img, .qr-img canvas { width: 100% !important; height: 100% !important; }
+  .qr-text b { display: block; font-size: 16px; margin-bottom: 4px; }
+  .qr-text a { color: var(--brand); font-size: 13px; word-break: break-all; }
+  .qr-text p { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
+
+  .trophy { font-size: 64px; text-align: center; line-height: 1; margin-bottom: 6px; }
+  .my-score { text-align: center; font-size: 16px; color: var(--muted); margin-bottom: 16px; }
+  .my-score b { color: var(--brand); font-size: 22px; }
+  .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; margin-bottom: 8px;
+                      background: var(--soft); font-size: 17px; }
+  .leaderboard-item .place { width: 30px; text-align: center; font-weight: 900; font-size: 20px; flex-shrink: 0; }
+  .leaderboard-item .name { flex: 1; font-weight: 500; min-width: 0; }
+  .leaderboard-item .name small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 3px; }
+  .leaderboard-item.me { background: #efe6ff; outline: 2px solid var(--brand); }
+  .leaderboard-item.gold { background: #fff6d6; }
+  .mini-bar { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 5px; }
+  .mini-bar > div { height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .4s; }
+
+  .toast-wrap { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; width: min(92vw, 420px); }
+  .toast { background: #1f1640; color: #fff; padding: 14px 18px; border-radius: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.35); animation: pop .2s; }
+  .toast.err { background: var(--red); } .toast.ok { background: var(--green); }
+  .spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  .spinner.dark { border-color: var(--line); border-top-color: var(--brand); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="logo">
+  <div class="logo-mark"><span class="drop">🍬</span>Marmalade Quiz</div>
+  <div class="logo-sub">Создавай викторины и играй с друзьями</div>
+</div>
+
+<div class="card">
+  <!-- ЗАГРУЗКА (пока восстанавливаем сессию после обновления) -->
+  <div id="screen-loading" class="screen">
+    <div class="wait"><span class="spinner dark"></span> Загрузка…</div>
+  </div>
+
+  <!-- ГЛАВНОЕ МЕНЮ -->
+  <div id="screen-menu" class="screen hidden">
+    <h2>Привет! 👋</h2>
+    <p class="hint">Как тебя зовут?</p>
+    <input type="text" id="playerName" placeholder="Введите ваше имя..." oninput="saveNameToStorage()" maxlength="24">
+    <div class="menu-actions">
+      <button class="menu-tile btn-green" onclick="openLobby()">
+        <span class="ico">🎮</span><span>Присоединиться к игре<small>Выбери комнату и играй</small></span>
+      </button>
+      <button class="menu-tile btn-pink" onclick="openHostScreen()">
+        <span class="ico">👑</span><span>Провести игру<small>Для создателя теста: запуск и топ игроков</small></span>
+      </button>
+      <button class="menu-tile btn-main" onclick="openCreator()">
+        <span class="ico">✏️</span><span>Создать свой тест<small>Вопросы, картинки, варианты ответов</small></span>
+      </button>
+    </div>
+    <div class="qr-box">
+      <div class="qr-img" id="menuQr"></div>
+      <div class="qr-text">
+        <b>📱 Открой на телефоне</b>
+        <p>Наведи камеру на QR-код, чтобы зайти в игру</p>
+        <a id="siteLink" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- СОЗДАНИЕ ТЕСТА -->
+  <div id="screen-creator" class="screen hidden">
+    <h2>Создатель теста</h2>
+    <label class="field-label" for="testIdInput">Название комнаты</label>
+    <input type="text" id="testIdInput" placeholder="Например: География 5А" oninput="saveDraft()">
+    <label class="field-label" for="testPinInput">PIN ведущего</label>
+    <input type="password" id="testPinInput" placeholder="Минимум 4 символа — нужен, чтобы запускать игру" oninput="saveDraft()" autocomplete="off">
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Вопросы теста</span>
+        <button class="link-muted" onclick="resetDraft()">🧹 начать заново</button>
+      </div>
+      <div id="pagesContainer" class="pages-bar"></div>
+    </div>
+
+    <div class="q-head">
+      <h3 id="currentQuestionTitleLabel">Вопрос 1</h3>
+      <button class="link-danger" id="deleteQuestionBtn" onclick="removeQuestionPage()">🗑 Удалить вопрос</button>
+    </div>
+    <label class="field-label" for="qTitle">Текст вопроса</label>
+    <input type="text" id="qTitle" placeholder="О чём спросим?" oninput="saveCurrentPageData()">
+
+    <div class="panel">
+      <span class="panel-title">⏱ Время на ответ</span>
+      <div class="time-row">
+        <select id="qTime" onchange="saveCurrentPageData()"></select>
+        <button class="link-muted" onclick="applyTimeToAll()">применить ко всем вопросам</button>
+      </div>
+      <div class="image-status">Быстрый верный ответ — до 100 баллов, медленнее — меньше. Не успел — 0.</div>
+    </div>
+
+    <div class="panel">
+      <span class="panel-title">📷 Картинка к вопросу (необязательно)</span>
+      <input type="text" id="selectedImageUrl" placeholder="Вставьте ссылку на картинку: https://..." style="margin:8px 0 0;"
+             oninput="onImageUrlInput()" autocomplete="off">
+      <div id="imageStatus" class="image-status hidden"></div>
+      <div id="imagePreview" class="image-preview hidden">
+        <img id="imagePreviewImg" alt="">
+        <button class="link-danger" onclick="clearImage()">✕ убрать картинку</button>
+      </div>
+    </div>
+
+    <label class="field-label">Варианты ответов · ✓ отметьте правильный</label>
+    <div id="optionsContainer"></div>
+    <div class="row">
+      <button class="btn btn-ghost btn-sm" onclick="addOptionField()">＋ Вариант</button>
+      <button class="btn btn-ghost btn-sm" onclick="removeOptionField()">－ Вариант</button>
+    </div>
+
+    <button id="saveTestBtn" class="btn btn-green" onclick="finishAndSaveAllQuestions()" style="margin-top:18px;">🚀 Сохранить тест</button>
+    <button class="btn btn-ghost" onclick="goToMenu()">← Назад в меню</button>
+  </div>
+
+  <!-- ЭКРАН ВЕДУЩЕГО -->
+  <div id="screen-host" class="screen hidden">
+    <h2>👑 Ведущий</h2>
+    <div id="hostPick">
+      <p class="hint">Только создатель теста может открыть комнату и начать игру</p>
+      <label class="field-label" for="hostTestSelect">Ваш тест</label>
+      <select id="hostTestSelect" onchange="fillHostPin()"><option value="">Загрузка тестов...</option></select>
+      <label class="field-label" for="hostPinInput">PIN ведущего</label>
+      <input type="password" id="hostPinInput" placeholder="PIN, который вы задали при создании" autocomplete="off"
+             onkeydown="if(event.key==='Enter') hostOpenRoom()">
+      <button id="hostOpenBtn" class="btn btn-pink" onclick="hostOpenRoom()">Открыть комнату</button>
+    </div>
+
+    <div id="hostRoom" class="hidden">
+      <div class="room-code">
+        <small>Код для входа</small>
+        <div id="hostRoomCode" class="big-code">······</div>
+        <small id="hostRoomName"></small><br>
+        <span class="status-badge" id="hostStatus">Набор игроков</span>
+      </div>
+      <div class="qr-box" id="hostQrBox">
+        <div class="qr-img" id="hostQr"></div>
+        <div class="qr-text">
+          <b>Сайт игры</b>
+          <p>Игроки сканируют QR-код и вводят код комнаты</p>
+          <a class="site-link-copy" target="_blank" rel="noopener"></a>
+        </div>
+      </div>
+      <label class="field-label" id="hostListLabel">Игроки · 0</label>
+      <div id="hostList"></div>
+      <button id="hostStartBtn" class="btn btn-green" onclick="hostStart()" disabled>Ждём игроков…</button>
+      <button id="hostNewGameBtn" class="btn btn-main hidden" onclick="hostNewGame()">🔁 Новая игра (сбросить очки)</button>
+    </div>
+    <button class="btn btn-ghost" onclick="goToMenu()">← Назад в меню</button>
+  </div>
+
+  <!-- КОМНАТА ОЖИДАНИЯ (игрок) -->
+  <div id="screen-lobby" class="screen hidden">
+    <h2>Комната ожидания</h2>
+    <div id="pickArea">
+      <p class="hint">Введите код комнаты — его покажет ведущий</p>
+      <input type="text" id="roomCodeInput" class="code-input" placeholder="000000" maxlength="6"
+             inputmode="numeric" autocomplete="off"
+             oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter') joinRoom()">
+      <button id="joinBtn" class="btn btn-main" onclick="joinRoom()">Войти в игру</button>
+    </div>
+
+    <div id="roomArea" class="hidden">
+      <div class="room-code"><small>Вы в комнате</small><div id="roomName"></div></div>
+      <label class="field-label">Игроки в сети · <span id="playersCount">0</span></label>
+      <div id="playersList" class="players"></div>
+      <div class="wait" id="waitText"><span class="dots"><span></span><span></span><span></span></span> <span id="waitLabel">Ожидаем, когда ведущий начнёт игру…</span></div>
+    </div>
+    <button class="btn btn-ghost" onclick="goToMenu()">← Назад в меню</button>
+  </div>
+
+  <!-- ЭКРАН ИГРЫ -->
+  <div id="screen-game" class="screen hidden">
+    <div class="game-top">
+      <span id="qNum">Вопрос</span>
+      <span class="score-pill">⭐ <span id="liveScore">0</span></span>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="timer-row" id="timerRow">
+      <div class="timer-num" id="timerNum">20</div>
+      <div class="timer-track"><div id="timerBar"></div></div>
+      <div class="pts-badge" id="ptsNow">100 б.</div>
+    </div>
+    <div id="gameImageArea"></div>
+    <p id="qTextDisplay" class="q-text"></p>
+    <div id="optionsArea" class="options-grid"></div>
+    <div id="feedback" class="feedback"></div>
+    <button class="btn btn-ghost" style="margin-top:16px;" onclick="goToMenu()">← Выйти в меню</button>
+  </div>
+
+  <!-- РЕЗУЛЬТАТЫ (игрок) -->
+  <div id="screen-results" class="screen hidden">
+    <div class="trophy">🏆</div>
+    <h2>Результаты викторины</h2>
+    <div id="myScore" class="my-score"></div>
+    <div id="leaderboard"></div>
+    <button id="rejoinBtn" class="btn btn-green hidden" onclick="rejoinNewGame()">🎮 Ведущий начал новую игру — войти</button>
+    <button class="btn btn-main" onclick="goToMenu()">← В главное меню</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // Адрес сайта для QR-кода
+  const SITE_URL = 'https://asatullaev1999-maker.github.io/Quiz/';
+
+  // ---- настройки баллов и времени ----
+  const MAX_POINTS = 100;     // за мгновенный верный ответ
+  const MIN_POINTS = 10;      // за верный ответ в самую последнюю секунду
+  const DEFAULT_TIME = 20;    // секунд, если у вопроса время не задано
+  const TIME_CHOICES = [5, 10, 15, 20, 30, 45, 60, 90, 120];
+
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzq0mZ2q5ilg1p6puzvrCzAvqn-0XnMqSoKn_q_8zzWs4NxQ_v8Wh9l4a3W_f_daNkc/exec';
+
+  const SHAPES = ['▲', '◆', '●', '■', '★', '♥'];
+  const AVATAR_COLORS = ['#e21b3c', '#1368ce', '#e0a100', '#22a35a', '#0aa3a3', '#864cbf', '#f72fa0'];
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  const KEY = { name: 'marmalade_player_name', session: 'marmalade_session', draft: 'marmalade_draft', pins: 'marmalade_pins' };
+
+  // S — всё, что нужно, чтобы вернуться на то же место после обновления страницы
+  // { screen, testId, gameId, qIdx, score, pin }
+  let S = { screen: 'menu' };
+  // постоянный скрытый ID этого устройства — чтобы игроки с одинаковыми именами не путались
+  const PID = (() => {
+    try {
+      let id = localStorage.getItem('marmalade_pid');
+      if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('marmalade_pid', id); }
+      return id;
+    } catch (e) { return Math.random().toString(36).slice(2); }
+  })();
+  let questions = [], pages = [], activePageIndex = 0, pollTimer = null, answering = false;
+
+  // ---------- утилиты ----------
+  const $ = id => document.getElementById(id);
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+  function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+  function forget(key) { try { localStorage.removeItem(key); } catch (e) {} }
+  function setSession(patch) { S = Object.assign({}, S, patch); store(KEY.session, S); }
+
+  function toast(msg, type = '') {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    $('toasts').appendChild(el);
+    setTimeout(() => el.remove(), Math.max(3500, msg.length * 60));
+  }
+  function showScreen(id) {
+    document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
+    $(id).classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  // Опрос таблицы: новый запрос не начинается, пока не пришёл ответ на предыдущий
+  let pollBusy = false;
+  function startPoll(fn, ms) {
+    stopPoll();
+    const tick = async () => {
+      if (pollBusy) return;
+      pollBusy = true;
+      try { await fn(); } finally { pollBusy = false; }
+    };
+    tick();
+    // небольшой случайный разброс, чтобы 30 телефонов не стучались в одну и ту же секунду
+    pollTimer = setInterval(tick, ms + Math.floor(Math.random() * 1000));
+  }
+  // Меняем содержимое только если оно действительно изменилось — без мигания
+  function setHTML(el, html) {
+    if (el.dataset.html === html) return;
+    el.dataset.html = html;
+    el.innerHTML = html;
+  }
+  function setText(el, text) { if (el.textContent !== String(text)) el.textContent = text; }
+  function stopPoll() { if (pollTimer) clearInterval(pollTimer); pollTimer = null; }
+
+  function avatarColor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AVATAR_COLORS[h % AVATAR_COLORS.length]; }
+  function avatar(name) { return `<span class="avatar" style="background:${avatarColor(name)}">${esc(String(name || '?').trim().charAt(0).toUpperCase())}</span>`; }
+  function getName() { return $('playerName').value.trim(); }
+  function requireName() {
+    if (getName()) return true;
+    showScreen('screen-menu');
+    toast('Сначала введите ваше имя 🙂', 'err');
+    $('playerName').focus();
+    return false;
+  }
+  function setBtn(btn, busy, label) { delete btn.dataset.html; btn.disabled = busy; btn.innerHTML = busy ? `<span class="spinner"></span> ${label}` : label; }
+
+  // ---------- запросы к таблице ----------
+  // Ответ скрипта всегда должен быть JSON. Если пришла HTML-страница — значит
+  // скрипт упал, не развернут или доступ не «Все».
+  async function parseResponse(res) {
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (e) {
+      const err = new Error('NOT_JSON');
+      err.detail = (text.match(/<title>([^<]*)<\/title>/i) || [])[1] || text.slice(0, 120);
+      throw err;
+    }
+  }
+  // Запрос с таймаутом: в мобильной сети запрос может «зависнуть» навсегда —
+  // через 20 секунд обрываем его, и автоповтор отправит заново
+  async function fetchWithTimeout(url, opts = {}, ms = 20000) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try { return await fetch(url, Object.assign({}, opts, { signal: ctrl.signal })); }
+    finally { clearTimeout(t); }
+  }
+  async function apiGet(params) {
+    const res = await fetchWithTimeout(WEB_APP_URL + '?' + new URLSearchParams(params));
+    return parseResponse(res);
+  }
+  async function apiPost(body) {
+    const res = await fetchWithTimeout(WEB_APP_URL, { method: 'POST', body: JSON.stringify(body) });
+    return parseResponse(res);
+  }
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // То же, но с автоповтором: если сервер занят или связь мигнула — пробуем ещё раз
+  async function apiPostRetry(body, tries = 5) {
+    let last;
+    for (let i = 0; i < tries; i++) {
+      try {
+        const r = await apiPost(body);
+        if (!(r && r.busy)) return r;
+        last = r;
+      } catch (e) { last = e; }
+      await sleep(900 * (i + 1) + Math.random() * 800);
+    }
+    if (last instanceof Error) throw last;
+    return last;
+  }
+
+  // Понятное объяснение, что не так со связью с таблицей
+  async function diagnose(err) {
+    if (err && err.message === 'NOT_JSON') {
+      return 'Apps Script вернул страницу вместо данных. Проверьте развертывание: доступ «Все», запуск «от моего имени». ' + (err.detail ? '(' + err.detail + ')' : '');
+    }
+    try {
+      const p = await apiGet({ action: 'ping' });
+      if (!p.version || p.version < 3) return 'По ссылке WEB_APP_URL работает старая версия скрипта. Вставьте новый Code.gs и разверните «Новую версию» (или обновите ссылку на сайте).';
+      return 'Связь со скриптом есть, но запрос не прошёл. Попробуйте ещё раз.';
+    } catch (e) {
+      return 'Нет связи со скриптом. Проверьте интернет и ссылку WEB_APP_URL.';
+    }
+  }
+  async function loadTestsInto(select, preselect) {
+    select.innerHTML = '<option value="">Загрузка тестов...</option>';
+    try {
+      const tests = await apiGet({ action: 'getTests' });
+      if (!Array.isArray(tests) || !tests.length) { select.innerHTML = '<option value="">Нет созданных тестов</option>'; return; }
+      select.innerHTML = tests.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+      if (preselect && tests.includes(preselect)) select.value = preselect;
+    } catch (e) {
+      select.innerHTML = '<option value="">Ошибка загрузки тестов</option>';
+    }
+  }
+
+  // ---------- старт и восстановление после обновления ----------
+  // ---------- QR-код на сайт ----------
+  function drawQr(el) {
+    if (!el || el.dataset.done) return;
+    el.dataset.done = '1';
+    el.innerHTML = '';
+    if (window.QRCode) {
+      new QRCode(el, { text: SITE_URL, width: 200, height: 200, colorDark: '#1f1640', colorLight: '#ffffff',
+                       correctLevel: QRCode.CorrectLevel.M });
+    } else {
+      // запасной вариант, если библиотека не загрузилась
+      el.innerHTML = `<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(SITE_URL)}">`;
+    }
+  }
+  function initQr() {
+    const short = SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    document.querySelectorAll('#siteLink, .site-link-copy').forEach(a => { a.href = SITE_URL; a.textContent = short; });
+    drawQr($('menuQr'));
+    drawQr($('hostQr'));
+  }
+
+  window.onload = async function () {
+    initQr();
+    try { $('playerName').value = localStorage.getItem(KEY.name) || ''; } catch (e) {}
+    S = load(KEY.session, { screen: 'menu' });
+
+    // без имени игровые экраны не восстановить
+    if (!getName() && ['lobby', 'game', 'results', 'host'].includes(S.screen)) S = { screen: 'menu' };
+
+    if (S.scorePending && ['game', 'results'].includes(S.screen)) { scoreDirty = true; setTimeout(flushScore, 500); }
+    try {
+      switch (S.screen) {
+        case 'creator': openCreator(); break;
+        case 'host':    (S.testId && S.pin) ? showHostRoom() : openHostScreen(); break;
+        case 'lobby':   S.testId ? (showScreen('screen-lobby'), enterRoom(S.testId)) : openLobby(); break;
+        case 'game':    await resumeGame(); break;
+        case 'results': showResults(); break;
+        default:        goToMenu();
+      }
+    } catch (e) { goToMenu(); }
+  };
+
+  function saveNameToStorage() { try { localStorage.setItem(KEY.name, getName()); } catch (e) {} }
+
+  function goToMenu() {
+    stopPoll();
+    stopTimer();
+    setSession({ screen: 'menu', testId: null, gameId: null, qIdx: 0, score: 0, pin: null });
+    $('roomArea').classList.add('hidden');
+    $('pickArea').classList.remove('hidden');
+    showScreen('screen-menu');
+  }
+
+  // ---------- конструктор ----------
+  function newPage() {
+    // новый вопрос получает то же время, что и предыдущий
+    const last = pages[pages.length - 1];
+    return { question: '', imageUrl: '', options: ['', ''], correct: 0, time: (last && last.time) || DEFAULT_TIME };
+  }
+  function qTimeOf(q) { const t = Number(q && q.time); return t > 0 ? t : DEFAULT_TIME; }
+
+  function applyTimeToAll() {
+    saveCurrentPageData();
+    const t = qTimeOf(pages[activePageIndex]);
+    pages.forEach(p => p.time = t);
+    saveDraft();
+    toast(`Всем вопросам: ${t} сек ⏱`, 'ok');
+  }
+
+  function openCreator() {
+    if (!requireName()) return;
+    stopPoll();
+    const draft = load(KEY.draft, null);
+    if (draft && Array.isArray(draft.pages) && draft.pages.length) {
+      pages = draft.pages;
+      activePageIndex = Math.min(draft.activePageIndex || 0, pages.length - 1);
+      $('testIdInput').value = draft.testId || '';
+      $('testPinInput').value = draft.pin || '';
+    } else {
+      pages = [newPage()]; activePageIndex = 0;
+      $('testIdInput').value = ''; $('testPinInput').value = '';
+    }
+    setSession({ screen: 'creator' });
+    showScreen('screen-creator');
+    renderCreatorPage();
+  }
+
+  function saveDraft() {
+    store(KEY.draft, { testId: $('testIdInput').value, pin: $('testPinInput').value, pages, activePageIndex });
+  }
+
+  function resetDraft() {
+    if (!confirm('Стереть все вопросы и начать новый тест?')) return;
+    forget(KEY.draft);
+    pages = [newPage()]; activePageIndex = 0;
+    $('testIdInput').value = ''; $('testPinInput').value = '';
+    renderCreatorPage();
+  }
+
+  function saveCurrentPageData() {
+    const page = pages[activePageIndex];
+    if (!page) return;
+    page.question = $('qTitle').value;
+    page.imageUrl = $('selectedImageUrl').value.trim();
+    page.time = Number($('qTime').value) || DEFAULT_TIME;
+    const opts = []; let correctIdx = 0;
+    document.querySelectorAll('.option-row').forEach((row, idx) => {
+      opts.push(row.querySelector('input[type="text"]').value);
+      if (row.querySelector('input[type="radio"]').checked) correctIdx = idx;
+    });
+    page.options = opts;
+    page.correct = correctIdx;
+    saveDraft();
+  }
+
+  // Ссылки Google Диска превращаем в прямую ссылку на картинку
+  function normalizeImageUrl(url) {
+    url = String(url || '').trim();
+    const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
+    if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1000`;
+    return url;
+  }
+
+  function onImageUrlInput() {
+    const fixed = normalizeImageUrl($('selectedImageUrl').value);
+    if (fixed !== $('selectedImageUrl').value.trim()) $('selectedImageUrl').value = fixed;
+    pages[activePageIndex].imageUrl = fixed;
+    renderChosenImage();
+    saveDraft();
+  }
+
+  function renderChosenImage() {
+    const url = $('selectedImageUrl').value.trim();
+    const box = $('imagePreview'), img = $('imagePreviewImg'), status = $('imageStatus');
+    status.className = 'image-status hidden';
+    if (!url) { box.classList.add('hidden'); img.removeAttribute('src'); return; }
+    if (!/^https?:\/\//i.test(url)) {
+      box.classList.add('hidden');
+      status.className = 'image-status err';
+      status.textContent = 'Ссылка должна начинаться с http:// или https://';
+      return;
+    }
+    status.className = 'image-status';
+    status.textContent = 'Загружаем картинку…';
+    img.onload = () => { status.className = 'image-status hidden'; box.classList.remove('hidden'); };
+    img.onerror = () => {
+      box.classList.add('hidden');
+      status.className = 'image-status err';
+      status.textContent = 'Картинка не открывается. Нужна прямая ссылка на изображение (правой кнопкой → «Копировать адрес изображения»).';
+    };
+    img.src = url;
+  }
+  function clearImage() {
+    $('selectedImageUrl').value = '';
+    pages[activePageIndex].imageUrl = '';
+    renderChosenImage();
+    saveDraft();
+  }
+
+  function renderCreatorPage() {
+    const page = pages[activePageIndex];
+    $('currentQuestionTitleLabel').innerText = `Вопрос ${activePageIndex + 1}`;
+    $('qTitle').value = page.question || '';
+    $('selectedImageUrl').value = page.imageUrl || '';
+    const t = qTimeOf(page);
+    const choices = TIME_CHOICES.includes(t) ? TIME_CHOICES : TIME_CHOICES.concat(t).sort((a, b) => a - b);
+    $('qTime').innerHTML = choices.map(s => `<option value="${s}" ${s === t ? 'selected' : ''}>${s < 60 ? s + ' сек' : Math.floor(s / 60) + ' мин' + (s % 60 ? ' ' + s % 60 + ' сек' : '')}</option>`).join('');
+    $('deleteQuestionBtn').classList.toggle('hidden', pages.length < 2);
+    renderChosenImage();
+
+    const container = $('optionsContainer');
+    container.innerHTML = '';
+    page.options.forEach((optText, idx) => {
+      const row = document.createElement('div');
+      row.className = 'option-row';
+      row.innerHTML = `
+        <span class="chip c-${idx % 6}">${SHAPES[idx % 6]}</span>
+        <input type="text" class="opt-input" placeholder="Вариант ${idx + 1}">
+        <label class="correct-toggle" title="Правильный ответ">
+          <input type="radio" name="correctOptionRadio" ${page.correct === idx ? 'checked' : ''}><span>✓</span>
+        </label>`;
+      const ti = row.querySelector('input[type="text"]');
+      ti.value = optText;
+      ti.oninput = saveCurrentPageData;
+      row.querySelector('input[type="radio"]').onchange = saveCurrentPageData;
+      container.appendChild(row);
+    });
+    renderPagesBar();
+    saveDraft();
+  }
+
+  function renderPagesBar() {
+    const bar = $('pagesContainer');
+    bar.innerHTML = '';
+    pages.forEach((_, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'page-btn' + (idx === activePageIndex ? ' active' : '');
+      btn.innerText = idx + 1;
+      btn.onclick = () => { saveCurrentPageData(); activePageIndex = idx; renderCreatorPage(); };
+      bar.appendChild(btn);
+    });
+    const add = document.createElement('button');
+    add.className = 'page-btn add'; add.title = 'Добавить вопрос'; add.innerText = '+';
+    add.onclick = addNewQuestionPage;
+    bar.appendChild(add);
+  }
+
+  function addNewQuestionPage() {
+    saveCurrentPageData();
+    pages.push(newPage());
+    activePageIndex = pages.length - 1;
+    renderCreatorPage();
+    $('qTitle').focus();
+  }
+  function removeQuestionPage() {
+    if (pages.length < 2 || !confirm(`Удалить вопрос ${activePageIndex + 1}?`)) return;
+    pages.splice(activePageIndex, 1);
+    activePageIndex = Math.max(0, activePageIndex - 1);
+    renderCreatorPage();
+  }
+  function addOptionField() {
+    saveCurrentPageData();
+    if (pages[activePageIndex].options.length < 6) { pages[activePageIndex].options.push(''); renderCreatorPage(); }
+    else toast('Максимум 6 вариантов');
+  }
+  function removeOptionField() {
+    saveCurrentPageData();
+    const p = pages[activePageIndex];
+    if (p.options.length > 2) { p.options.pop(); if (p.correct >= p.options.length) p.correct = 0; renderCreatorPage(); }
+    else toast('Нужно минимум 2 варианта');
+  }
+
+  async function finishAndSaveAllQuestions() {
+    saveCurrentPageData();
+    const testId = $('testIdInput').value.trim();
+    const pin = $('testPinInput').value.trim();
+    if (!testId) { toast('Введите название комнаты!', 'err'); $('testIdInput').focus(); return; }
+    if (pin.length < 4) { toast('Придумайте PIN ведущего (минимум 4 символа)', 'err'); $('testPinInput').focus(); return; }
+
+    for (let i = 0; i < pages.length; i++) {
+      const p = pages[i];
+      if (!p.question.trim() || p.options.filter(o => o.trim()).length < 2) {
+        toast(`Заполните вопрос и минимум 2 ответа в вопросе ${i + 1}`, 'err');
+        activePageIndex = i; renderCreatorPage(); return;
+      }
+      if (!(p.options[p.correct] || '').trim()) {
+        toast(`В вопросе ${i + 1} правильный ответ пустой`, 'err');
+        activePageIndex = i; renderCreatorPage(); return;
+      }
+    }
+
+    const payload = pages.map(p => {
+      const filled = p.options.map((o, idx) => ({ o: o.trim(), idx })).filter(x => x.o);
+      return {
+        question: p.question.trim(),
+        options: filled.map(x => x.o),
+        correct: Math.max(0, filled.findIndex(x => x.idx === p.correct)),
+        imageUrl: p.imageUrl,
+        time: qTimeOf(p)
+      };
+    });
+
+    const btn = $('saveTestBtn');
+    setBtn(btn, true, 'Сохраняем…');
+    try {
+      const r = await apiPostRetry({ action: 'saveTest', testId, pin, creator: getName(), questions: payload });
+      if (!r || !r.ok) { toast((r && r.error) || await diagnose(), 'err'); return; }
+      const pins = load(KEY.pins, {}); pins[testId] = pin; store(KEY.pins, pins);
+      forget(KEY.draft);
+      toast(`Тест сохранён (${r.count} вопр.) 🎉 Откройте комнату для игроков`, 'ok');
+      openHostScreen(testId);
+    } catch (err) {
+      toast(await diagnose(err), 'err');
+    } finally {
+      setBtn(btn, false, '🚀 Сохранить тест');
+    }
+  }
+
+  // ---------- ведущий ----------
+  async function openHostScreen(preselect) {
+    if (!requireName()) return;
+    stopPoll();
+    setSession({ screen: 'host', testId: null, pin: null, gameId: null });
+    $('hostPick').classList.remove('hidden');
+    $('hostRoom').classList.add('hidden');
+    showScreen('screen-host');
+    await loadTestsInto($('hostTestSelect'), preselect);
+    fillHostPin();
+  }
+
+  function fillHostPin() {
+    const pins = load(KEY.pins, {});
+    $('hostPinInput').value = pins[$('hostTestSelect').value] || '';
+  }
+
+  async function hostOpenRoom() {
+    const testId = $('hostTestSelect').value, pin = $('hostPinInput').value.trim();
+    if (!testId) { toast('Выберите тест', 'err'); return; }
+    if (!pin) { toast('Введите PIN ведущего', 'err'); $('hostPinInput').focus(); return; }
+    const btn = $('hostOpenBtn');
+    setBtn(btn, true, 'Открываем…');
+    try {
+      const r = await apiPostRetry({ action: 'openRoom', testId, pin });
+      if (!r.ok) { toast(r.error || 'Не удалось открыть комнату', 'err'); return; }
+      const pins = load(KEY.pins, {}); pins[testId] = pin; store(KEY.pins, pins);
+      setSession({ screen: 'host', testId, pin, gameId: r.gameId, code: r.code });
+      showHostRoom();
+    } catch (e) {
+      toast(await diagnose(e), 'err');
+    } finally {
+      setBtn(btn, false, 'Открыть комнату');
+    }
+  }
+
+  function showHostRoom() {
+    showScreen('screen-host');
+    $('hostPick').classList.add('hidden');
+    $('hostRoom').classList.remove('hidden');
+    $('hostRoomName').textContent = 'Тест: ' + S.testId;
+    $('hostRoomCode').textContent = S.code || '······';
+    setHTML($('hostList'), '<div class="wait"><span class="spinner dark"></span></div>');
+    startPoll(hostPoll, 3000);
+  }
+
+  async function hostPoll() {
+    let d;
+    try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); } catch (e) { return; }
+    if (!d.exists) { $('hostStatus').textContent = 'Комната закрыта'; return; }
+    if (d.gameId !== S.gameId || d.code !== S.code) setSession({ gameId: d.gameId, code: d.code });
+    setText($('hostRoomCode'), d.code || '······');
+
+    const players = d.players || [];
+    const finished = players.filter(p => p.finished).length;
+    const startBtn = $('hostStartBtn');
+
+    if (!d.started) {
+      setText($('hostStatus'), 'Набор игроков');
+      setText($('hostListLabel'), `Игроки · ${players.length}`);
+      setHTML($('hostList'), players.length
+        ? `<div class="players">${players.map(p => `<span class="player-tag">${avatar(p.name)}${esc(p.name)}</span>`).join('')}</div>`
+        : '<div class="wait"><span class="dots"><span></span><span></span><span></span></span> Ждём, когда игроки зайдут в комнату…</div>');
+      startBtn.classList.remove('hidden');
+      if (!startBtn.dataset.busy) {
+        startBtn.disabled = !players.length;
+        setHTML(startBtn, players.length ? `🚀 НАЧАТЬ ИГРУ (${players.length})` : 'Ждём игроков…');
+      }
+      $('hostNewGameBtn').classList.add('hidden');
+    } else {
+      setText($('hostStatus'), (players.length && finished === players.length)
+        ? 'Игра завершена 🎉' : `Игра идёт · закончили ${finished} из ${players.length}`);
+      setText($('hostListLabel'), 'Топ игроков (обновляется сам)');
+      setHTML($('hostList'), renderBoard(players, d.total, null) || '<p class="empty">Нет игроков</p>');
+      startBtn.classList.add('hidden');
+      $('hostNewGameBtn').classList.remove('hidden');
+    }
+  }
+
+  async function hostStart() {
+    const btn = $('hostStartBtn');
+    btn.dataset.busy = '1';
+    setBtn(btn, true, 'Запускаем…');
+    try {
+      const r = await apiPostRetry({ action: 'startRoom', testId: S.testId, pin: S.pin });
+      if (!r.ok) toast(r.error || 'Ошибка запуска', 'err');
+    } catch (e) {
+      toast(await diagnose(e), 'err');
+    } finally {
+      delete btn.dataset.busy;
+      btn.disabled = false;
+      hostPoll();
+    }
+  }
+
+  async function hostNewGame() {
+    if (!confirm('Начать новую игру? Текущие очки обнулятся, игрокам нужно будет снова зайти в комнату.')) return;
+    try {
+      const r = await apiPostRetry({ action: 'openRoom', testId: S.testId, pin: S.pin });
+      if (!r.ok) { toast(r.error, 'err'); return; }
+      setSession({ gameId: r.gameId });
+      hostPoll();
+    } catch (e) { toast(await diagnose(e), 'err'); }
+  }
+
+  // ---------- игрок: лобби ----------
+  function openLobby() {
+    if (!requireName()) return;
+    stopPoll();
+    setSession({ screen: 'lobby', testId: null, gameId: null });
+    $('pickArea').classList.remove('hidden');
+    $('roomArea').classList.add('hidden');
+    showScreen('screen-lobby');
+    $('roomCodeInput').value = '';
+    $('roomCodeInput').focus();
+  }
+
+  // вход по коду от ведущего
+  async function joinRoom() {
+    const code = $('roomCodeInput').value.trim();
+    if (code.length !== 6) { toast('Код состоит из 6 цифр', 'err'); $('roomCodeInput').focus(); return; }
+    const btn = $('joinBtn');
+    setBtn(btn, true, 'Проверяем код…');
+    try {
+      const r = await apiPostRetry({ action: 'joinRoom', code, player: getName(), pid: PID });
+      if (!r.ok) { toast(r.error || 'Неверный код', 'err'); return; }
+      afterJoin(r);
+    } catch (e) {
+      toast(await diagnose(e), 'err');
+    } finally {
+      setBtn(btn, false, 'Войти в игру');
+    }
+  }
+
+  // повторный вход в ту же комнату (после обновления страницы или новой игры у ведущего)
+  async function enterRoom(testId) {
+    stopPoll();
+    $('pickArea').classList.add('hidden');
+    $('roomArea').classList.remove('hidden');
+    $('roomName').textContent = testId;
+    setHTML($('playersList'), '<span class="spinner dark"></span>');
+    $('waitLabel').textContent = 'Подключаемся…';
+    try {
+      const r = await apiPostRetry({ action: 'joinRoom', testId, player: getName(), pid: PID });
+      if (!r.ok) {
+        // комната закрыта — подождём, ведущий может открыть её снова
+        setSession({ screen: 'lobby', testId, gameId: null });
+        $('waitLabel').textContent = r.error || 'Комната пока закрыта';
+        setHTML($('playersList'), '');
+        startPoll(checkRoomStatus, 5000);
+        return;
+      }
+      afterJoin(r);
+    } catch (e) {
+      toast(await diagnose(e), 'err');
+      setSession({ screen: 'lobby', testId });
+      startPoll(checkRoomStatus, 5000);
+    }
+  }
+
+  function afterJoin(r) {
+    stopPoll();
+    setSession({ screen: 'lobby', testId: r.testId, gameId: r.gameId, qIdx: 0, score: 0, total: 0, scorePending: false, qStartIdx: null, qStartAt: null });
+    showScreen('screen-lobby');
+    $('pickArea').classList.add('hidden');
+    $('roomArea').classList.remove('hidden');
+    $('roomName').textContent = r.testId;
+    $('waitLabel').textContent = 'Ожидаем, когда ведущий начнёт игру…';
+    if (r.started) { startGame(); return; }
+    startPoll(checkRoomStatus, 4000);
+  }
+
+  async function checkRoomStatus() {
+    let d;
+    try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); } catch (e) { return; }
+    if (!d.exists) { setText($('waitLabel'), 'Ведущий ещё не открыл эту комнату…'); return; }
+    if (d.gameId !== S.gameId) { enterRoom(S.testId); return; } // ведущий открыл комнату заново
+    const players = d.players || [];
+    setText($('playersCount'), players.length);
+    setHTML($('playersList'), players.map(p => `<span class="player-tag">${avatar(p.name)}${esc(p.name)}</span>`).join(''));
+    if (d.started) { stopPoll(); startGame(); }
+  }
+
+  // ---------- игрок: игра ----------
+  async function startGame() {
+    stopPoll();
+    setSession({ screen: 'game' });
+    showScreen('screen-game');
+    $('qTextDisplay').textContent = 'Загружаем вопросы…';
+    $('optionsArea').innerHTML = '';
+    $('gameImageArea').innerHTML = '';
+    try {
+      questions = await apiGet({ action: 'getQuestions', testId: S.testId });
+      if (!Array.isArray(questions) || !questions.length) throw new Error();
+      setSession({ total: questions.length });
+      renderQuestion();
+    } catch (e) {
+      toast('Не удалось загрузить вопросы игры.', 'err');
+      goToMenu();
+    }
+  }
+
+  // после обновления страницы во время игры — продолжаем с того же вопроса
+  async function resumeGame() {
+    showScreen('screen-game');
+    $('qTextDisplay').textContent = 'Возвращаемся в игру…';
+    const d = await apiGet({ action: 'getRoomStatus', testId: S.testId });
+    if (!d.exists) { toast('Комната закрыта', 'err'); goToMenu(); return; }
+    if (d.gameId !== S.gameId || !d.started) { showScreen('screen-lobby'); enterRoom(S.testId); return; }
+    await startGame();
+  }
+
+  // ---------- таймер ----------
+  let timerId = null;
+  function stopTimer() { if (timerId) clearInterval(timerId); timerId = null; }
+
+  // баллы за верный ответ: 100 сразу, линейно падают до MIN_POINTS к концу времени
+  function pointsFor(elapsedMs, limitSec) {
+    const frac = Math.min(1, Math.max(0, elapsedMs / (limitSec * 1000)));
+    return Math.round(MAX_POINTS - (MAX_POINTS - MIN_POINTS) * frac);
+  }
+  function elapsedMs() { return Math.max(0, Date.now() - (S.qStartAt || Date.now())); }
+
+  function startTimer(q) {
+    stopTimer();
+    const limit = qTimeOf(q);
+    const tick = () => {
+      const el = elapsedMs();
+      const left = Math.max(0, limit * 1000 - el);
+      const sec = Math.ceil(left / 1000);
+      setText($('timerNum'), sec);
+      $('timerBar').style.width = (left / (limit * 1000) * 100) + '%';
+      setText($('ptsNow'), left > 0 ? pointsFor(el, limit) + ' б.' : '0 б.');
+      const row = $('timerRow');
+      row.classList.toggle('danger', sec <= 3);
+      row.classList.toggle('warn', sec > 3 && left / (limit * 1000) <= 0.4);
+      if (left <= 0) { stopTimer(); timeUp(q); }
+    };
+    tick();
+    if (!answering) timerId = setInterval(tick, 100);
+  }
+
+  function timeUp(q) {
+    if (answering) return;
+    answering = true;
+    setSession({ qIdx: S.qIdx + 1, qStartAt: null });
+    queueScore();
+    document.querySelectorAll('#optionsArea .option-btn').forEach((b, i) => {
+      b.classList.add(i == q.correct ? 'right' : 'dim');
+    });
+    $('feedback').className = 'feedback bad';
+    $('feedback').innerHTML = '⏰ Время вышло!<small>0 баллов</small>';
+    setTimeout(renderQuestion, 1800);
+  }
+
+  function renderQuestion() {
+    stopTimer();
+    if (S.qIdx >= questions.length) { finishGame(); return; }
+    answering = false;
+    const q = questions[S.qIdx];
+    // время старта вопроса запоминаем — после обновления страницы таймер не начнётся заново
+    if (S.qStartIdx !== S.qIdx || !S.qStartAt) setSession({ qStartIdx: S.qIdx, qStartAt: Date.now() });
+    $('timerRow').classList.remove('warn', 'danger');
+    $('qNum').innerText = `Вопрос ${S.qIdx + 1} из ${questions.length}`;
+    $('liveScore').innerText = S.score;
+    $('progressBar').style.width = (S.qIdx / questions.length * 100) + '%';
+    $('qTextDisplay').innerText = q.question;
+    $('feedback').className = 'feedback';
+    $('feedback').textContent = '';
+    $('gameImageArea').innerHTML = q.imageUrl ? `<img src="${esc(q.imageUrl)}" alt="">` : '';
+
+    const area = $('optionsArea');
+    area.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = `option-btn c-${idx % 6}`;
+      btn.innerHTML = `<span class="shape">${SHAPES[idx % 6]}</span><span></span>`;
+      btn.lastChild.textContent = opt;
+      btn.onclick = () => answer(idx, q);
+      area.appendChild(btn);
+    });
+    startTimer(q);
+  }
+
+  function answer(idx, q) {
+    if (answering) return;
+    const el = elapsedMs(), limit = qTimeOf(q);
+    if (el >= limit * 1000) { stopTimer(); timeUp(q); return; }
+    answering = true;
+    stopTimer();
+    const isRight = idx == q.correct;
+    const pts = isRight ? pointsFor(el, limit) : 0;
+    // сохраняем сразу — если обновить страницу, ответ не потеряется и не засчитается дважды
+    setSession({ qIdx: S.qIdx + 1, score: S.score + pts, qStartAt: null });
+    queueScore();
+
+    document.querySelectorAll('#optionsArea .option-btn').forEach((b, i) => {
+      if (i == q.correct) b.classList.add('right');
+      else if (i === idx) b.classList.add('wrong');
+      else b.classList.add('dim');
+    });
+    $('feedback').className = 'feedback ' + (isRight ? 'ok' : 'bad');
+    $('feedback').innerHTML = isRight
+      ? `✅ Верно! +${pts}<small>ответ за ${(el / 1000).toFixed(1)} сек</small>`
+      : '❌ Неверно<small>0 баллов</small>';
+    $('liveScore').innerText = S.score;
+    setTimeout(renderQuestion, 1500);
+  }
+
+  function finishGame() {
+    $('progressBar').style.width = '100%';
+    queueScore();
+    showResults();
+  }
+
+  // ---------- отправка очков ----------
+  // Очки отправляются по одному запросу за раз; если пока шёл запрос игрок ответил ещё —
+  // отправится только последний результат. При ошибке — повтор через 3 секунды.
+  let scoreSending = false, scoreDirty = false;
+  function queueScore() {
+    setSession({ scorePending: true });
+    scoreDirty = true;
+    flushScore();
+  }
+  async function flushScore() {
+    if (scoreSending || !scoreDirty || !S.testId) return;
+    scoreSending = true;
+    scoreDirty = false;
+    const total = S.total || questions.length || 0;
+    const body = { action: 'saveScore', testId: S.testId, gameId: S.gameId, player: getName(), pid: PID,
+                   score: S.score, answered: S.qIdx, finished: total > 0 && S.qIdx >= total };
+    try {
+      const r = await apiPostRetry(body, 4);
+      if (r && (r.ok || r.stale || r.conflict)) { if (!scoreDirty) setSession({ scorePending: false }); }
+      else scoreDirty = true;
+    } catch (e) {
+      scoreDirty = true;
+    } finally {
+      scoreSending = false;
+      if (scoreDirty) setTimeout(flushScore, 3000);
+    }
+  }
+
+  // ---------- результаты ----------
+  function showResults() {
+    setSession({ screen: 'results' });
+    showScreen('screen-results');
+    $('rejoinBtn').classList.add('hidden');
+    setHTML($('myScore'), `Ваш результат: <b>${S.score || 0}</b>`);
+    setHTML($('leaderboard'), '<div class="wait"><span class="spinner dark"></span> Считаем очки…</div>');
+    startPoll(loadResults, 5000);
+  }
+
+  async function loadResults() {
+    let d;
+    try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); }
+    catch (e) { setHTML($('leaderboard'), '<p class="empty">Ошибка загрузки результатов</p>'); return; }
+    if (d.total) setHTML($('myScore'), `Ваш результат: <b>${S.score || 0}</b> из ${d.total * MAX_POINTS} баллов`);
+    if (d.exists && d.gameId !== S.gameId) { $('rejoinBtn').classList.remove('hidden'); return; }
+    // самовосстановление: если в таблице меньше, чем на телефоне — досылаем свой результат
+    const mine = (d.players || []).find(p => p.name === getName());
+    if (d.exists && (!mine || mine.answered < S.qIdx || mine.score !== S.score || !mine.finished)) {
+      queueScore();
+      // показываем свой настоящий результат, пока таблица догоняет
+      if (mine) { mine.score = S.score; mine.answered = S.qIdx; mine.finished = S.qIdx >= (d.total || S.qIdx); }
+    }
+    setHTML($('leaderboard'), renderBoard(d.players || [], d.total, getName()) || '<p class="empty">Пока нет результатов</p>');
+  }
+
+  function rejoinNewGame() {
+    stopPoll();
+    showScreen('screen-lobby');
+    enterRoom(S.testId);
+  }
+
+  function renderBoard(players, total, me) {
+    return players
+      .slice()
+      .sort((a, b) => (b.score - a.score) || (b.answered - a.answered))
+      .map((p, idx) => {
+        const pct = total ? Math.round(p.answered / total * 100) : 0;
+        const status = p.finished ? '✓ закончил(а)' : `ответил(а) ${p.answered} из ${total || '?'}`;
+        return `
+          <div class="leaderboard-item ${p.name === me ? 'me' : ''} ${idx === 0 && p.score > 0 ? 'gold' : ''}">
+            <span class="place">${MEDALS[idx] || idx + 1}</span>
+            ${avatar(p.name)}
+            <span class="name">${esc(p.name)}${p.name === me ? ' (вы)' : ''}
+              <small>${status}</small>
+              ${p.finished ? '' : `<div class="mini-bar"><div style="width:${pct}%"></div></div>`}
+            </span>
+            <b>${p.score} б.</b>
+          </div>`;
+      }).join('');
+  }
+</script>
+</body>
+</html>
