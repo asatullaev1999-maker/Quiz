@@ -956,7 +956,7 @@
 
   function afterJoin(r) {
     stopPoll();
-    setSession({ screen: 'lobby', testId: r.testId, gameId: r.gameId, qIdx: 0, score: 0, total: 0, scorePending: false, qStartIdx: null, qStartAt: null });
+    setSession({ screen: 'lobby', testId: r.testId, gameId: r.gameId, qIdx: 0, score: 0, correct: 0, total: 0, scorePending: false, qStartIdx: null, qStartAt: null });
     showScreen('screen-lobby');
     $('pickArea').classList.add('hidden');
     $('roomArea').classList.remove('hidden');
@@ -1087,7 +1087,7 @@
     const isRight = idx == q.correct;
     const pts = isRight ? pointsFor(el, limit) : 0;
     // сохраняем сразу — если обновить страницу, ответ не потеряется и не засчитается дважды
-    setSession({ qIdx: S.qIdx + 1, score: S.score + pts, qStartAt: null });
+    setSession({ qIdx: S.qIdx + 1, score: S.score + pts, correct: (S.correct || 0) + (isRight ? 1 : 0), qStartAt: null });
     queueScore();
 
     document.querySelectorAll('#optionsArea .option-btn').forEach((b, i) => {
@@ -1142,16 +1142,21 @@
     setSession({ screen: 'results' });
     showScreen('screen-results');
     $('rejoinBtn').classList.add('hidden');
-    setHTML($('myScore'), `Ваш результат: <b>${S.score || 0}</b>`);
+    setHTML($('myScore'), myScoreHTML(S.total || questions.length));
     setHTML($('leaderboard'), '<div class="wait"><span class="spinner dark"></span> Считаем очки…</div>');
     startPoll(loadResults, 5000);
+  }
+
+  function myScoreHTML(total) {
+    const right = S.correct || 0;
+    return `Ваш результат: <b>${S.score || 0}</b>` + (total ? `<br>Правильных ответов: <b>${right}</b> из ${total}` : '');
   }
 
   async function loadResults() {
     let d;
     try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); }
     catch (e) { setHTML($('leaderboard'), '<p class="empty">Ошибка загрузки результатов</p>'); return; }
-    if (d.total) setHTML($('myScore'), `Ваш результат: <b>${S.score || 0}</b> из ${d.total * MAX_POINTS} баллов`);
+    if (d.total) setHTML($('myScore'), myScoreHTML(d.total));
     if (d.exists && d.gameId !== S.gameId) { $('rejoinBtn').classList.remove('hidden'); return; }
     // самовосстановление: если в таблице меньше, чем на телефоне — досылаем свой результат
     const mine = (d.players || []).find(p => p.name === getName());
@@ -1191,3 +1196,4 @@
 </script>
 </body>
 </html>
+
