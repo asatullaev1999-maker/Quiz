@@ -8,9 +8,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #1e0b45; --card: #ffffff; --ink: #1f1640; --muted: #7a7096; --line: #ece8f5; --soft: #f6f3fc;
+    --bg: #1e0b45; --card: #ffffff; --surface: #ffffff; --ink: #1f1640; --muted: #7a7096; --line: #ece8f5; --soft: #f6f3fc;
+    --me-bg: #efe6ff; --gold-bg: #fff6d6;
     --brand: #7b2ff7; --brand-2: #f72fa0; --blue: #1368ce; --green: #22a35a; --red: #e21b3c;
     --yellow: #e0a100; --teal: #0aa3a3; --violet: #864cbf; --radius: 22px;
+  }
+  /* тёмная тема: по умолчанию — как в системе, кнопка 🌙/☀️ переключает вручную */
+  :root[data-theme="dark"] {
+    --card: #2b1a55; --surface: #3a2870; --ink: #f1ecff; --muted: #b0a4d6; --line: #44337a; --soft: #35246a;
+    --me-bg: #4a2f92; --gold-bg: #54451d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --card: #2b1a55; --surface: #3a2870; --ink: #f1ecff; --muted: #b0a4d6; --line: #44337a; --soft: #35246a;
+      --me-bg: #4a2f92; --gold-bg: #54451d;
+    }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; }
@@ -20,6 +32,10 @@
     background: radial-gradient(circle at 0% 0%, rgba(247,47,160,.55), transparent 50%),
                 radial-gradient(circle at 100% 100%, rgba(47,184,247,.5), transparent 55%),
                 radial-gradient(circle at 70% 45%, rgba(255,204,0,.18), transparent 40%); }
+
+  .toolbar { position: fixed; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 90; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.18); color: #fff; font-size: 18px; }
+  .icon-btn:hover { background: rgba(255,255,255,.3); }
 
   .logo { text-align: center; margin: 0 0 18px; }
   .logo-mark { display: inline-flex; align-items: center; gap: 10px; font-weight: 900; font-size: 30px; color: #fff; letter-spacing: -0.5px; }
@@ -38,7 +54,7 @@
                       letter-spacing: .5px; margin: 14px 0 6px; }
   input[type="text"], input[type="password"], select { width: 100%; padding: 14px 16px; margin: 0 0 10px;
     border: 2px solid var(--line); border-radius: 14px; background: var(--soft); font: inherit; font-size: 16px; color: var(--ink); transition: .15s; }
-  input:focus, select:focus { outline: none; border-color: var(--brand); background: #fff; box-shadow: 0 0 0 4px rgba(123,47,247,.12); }
+  input:focus, select:focus { outline: none; border-color: var(--brand); background: var(--surface); box-shadow: 0 0 0 4px rgba(123,47,247,.12); }
 
   button { font: inherit; cursor: pointer; border: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .btn { width: 100%; padding: 15px; margin: 6px 0; border-radius: 14px; font-size: 16px; font-weight: 700; color: #fff;
@@ -72,11 +88,12 @@
   .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .panel-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
   .pages-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-  .page-btn { width: 40px; height: 40px; border-radius: 12px; background: #fff; color: var(--ink); border: 2px solid var(--line); font-weight: 700; }
+  .page-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); color: var(--ink); border: 2px solid var(--line); font-weight: 700; }
   .page-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); box-shadow: 0 4px 12px rgba(123,47,247,.35); }
   .page-btn.add { border-style: dashed; color: var(--brand); }
   .q-head { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
   .q-head h3 { margin: 0; color: var(--brand); font-size: 20px; }
+  :root[data-theme="dark"] .q-head h3, :root[data-theme="dark"] .score-pill { color: #c9a8ff; }
   .link-danger { background: none; color: var(--red); font-size: 14px; font-weight: 500; padding: 4px; }
   .link-muted { background: none; color: var(--muted); font-size: 14px; font-weight: 500; padding: 4px; text-decoration: underline; }
 
@@ -91,11 +108,21 @@
   .correct-toggle { position: relative; flex-shrink: 0; }
   .correct-toggle input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
   .correct-toggle span { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center;
-                         color: transparent; font-weight: 900; transition: .15s; background: #fff; }
+                         color: transparent; font-weight: 900; transition: .15s; background: var(--surface); }
   .correct-toggle input:checked + span { background: var(--green); border-color: var(--green); color: #fff; }
 
   .c-0 { background: var(--red); } .c-1 { background: var(--blue); } .c-2 { background: var(--yellow); }
   .c-3 { background: var(--green); } .c-4 { background: var(--teal); } .c-5 { background: var(--violet); }
+
+  .mode-pick { display: grid; gap: 8px; margin: 6px 0 10px; }
+  .mode-opt { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 2px solid var(--line); border-radius: 14px;
+              background: var(--soft); cursor: pointer; }
+  .mode-opt input { margin-top: 5px; accent-color: var(--brand); }
+  .mode-opt:has(input:checked) { border-color: var(--brand); background: var(--surface); }
+  .mode-opt b { display: block; }
+  .mode-opt small { display: block; color: var(--muted); font-weight: 400; font-size: 13px; margin-top: 2px; }
+  .check-line { display: flex; gap: 8px; align-items: center; font-size: 14px; margin: 6px 0 12px; cursor: pointer; }
+  .check-line input { accent-color: var(--brand); width: 18px; height: 18px; margin: 0; }
 
   .room-code { text-align: center; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff;
                border-radius: 16px; padding: 14px; margin: 14px 0; }
@@ -108,7 +135,10 @@
   .players { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; }
   .player-tag { display: inline-flex; align-items: center; gap: 8px; background: var(--soft); padding: 6px 14px 6px 6px;
                 border-radius: 999px; font-weight: 500; }
+  .player-tag .kick { margin-right: -6px; }
   .avatar { width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .kick { background: none; color: var(--muted); padding: 2px 6px; font-size: 15px; border-radius: 8px; flex-shrink: 0; }
+  .kick:hover { color: var(--red); background: rgba(226,27,60,.1); }
   .wait { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); margin: 18px 0 6px; text-align: center; }
   .dots span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); margin: 0 2px; animation: bounce 1s infinite; }
   .dots span:nth-child(2) { animation-delay: .15s; } .dots span:nth-child(3) { animation-delay: .3s; }
@@ -128,13 +158,30 @@
                 transition: transform .08s, box-shadow .08s, opacity .2s, filter .15s; }
   .option-btn:hover { filter: brightness(1.08); }
   .option-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .option-btn:disabled { cursor: default; transform: none; filter: none; }
   .option-btn .shape { font-size: 22px; opacity: .9; flex-shrink: 0; }
   .option-btn.dim { opacity: .3; }
+  .option-btn.picked { outline: 4px solid #fff; box-shadow: 0 0 0 7px var(--brand); }
   .option-btn.right { outline: 4px solid #fff; box-shadow: 0 0 0 7px var(--green); }
   .option-btn.wrong { outline: 4px solid #fff; box-shadow: 0 0 0 7px #222; }
   .feedback { text-align: center; font-weight: 900; font-size: 20px; margin-top: 16px; min-height: 28px; }
   .feedback.ok { color: var(--green); } .feedback.bad { color: var(--red); }
   .feedback small { display: block; font-size: 15px; font-weight: 500; color: var(--muted); margin-top: 4px; }
+  .feedback small.rank { color: var(--brand); font-weight: 700; }
+  :root[data-theme="dark"] .feedback small.rank, :root[data-theme="dark"] .my-score b { color: #c9a8ff; }
+
+  .big-count { font-size: 84px; font-weight: 900; text-align: center; color: var(--brand); line-height: 1; margin: 14px 0 8px; }
+  .live-top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--muted); font-size: 14px; }
+  .live-img img { max-width: 100%; max-height: 240px; border-radius: 16px; display: block; margin: 0 auto 14px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 14px; }
+  @media (max-width: 480px) { .tiles { grid-template-columns: 1fr; } }
+  .opt-tile { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 12px; border-radius: 14px; color: #fff;
+              font-weight: 700; font-size: 17px; transition: opacity .2s; }
+  .opt-tile .shape { font-size: 20px; opacity: .9; flex-shrink: 0; }
+  .opt-tile .t { flex: 1; min-width: 0; word-break: break-word; }
+  .opt-tile .cnt { background: rgba(0,0,0,.28); border-radius: 999px; padding: 2px 11px; font-size: 15px; }
+  .opt-tile.dim { opacity: .3; }
+  .opt-tile.right { outline: 4px solid #fff; box-shadow: 0 0 0 7px var(--green); }
 
   /* таймер */
   .timer-row { display: flex; align-items: center; gap: 12px; margin: -6px 0 16px; }
@@ -148,6 +195,7 @@
   .timer-row.danger .timer-track > div { background: var(--red); }
   @keyframes pulse { to { transform: scale(1.08); } }
   .pts-badge { color: var(--brand); font-weight: 700; font-size: 14px; min-width: 64px; text-align: right; }
+  :root[data-theme="dark"] .pts-badge { color: #c9a8ff; }
   .time-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
   .time-row select { width: auto; flex: 1; min-width: 140px; margin: 0; }
 
@@ -157,6 +205,7 @@
   .qr-img img, .qr-img canvas { width: 100% !important; height: 100% !important; }
   .qr-text b { display: block; font-size: 16px; margin-bottom: 4px; }
   .qr-text a { color: var(--brand); font-size: 13px; word-break: break-all; }
+  :root[data-theme="dark"] .qr-text a { color: #c9a8ff; }
   .qr-text p { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
 
   .trophy { font-size: 64px; text-align: center; line-height: 1; margin-bottom: 6px; }
@@ -167,8 +216,8 @@
   .leaderboard-item .place { width: 30px; text-align: center; font-weight: 900; font-size: 20px; flex-shrink: 0; }
   .leaderboard-item .name { flex: 1; font-weight: 500; min-width: 0; }
   .leaderboard-item .name small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 3px; }
-  .leaderboard-item.me { background: #efe6ff; outline: 2px solid var(--brand); }
-  .leaderboard-item.gold { background: #fff6d6; }
+  .leaderboard-item.me { background: var(--me-bg); outline: 2px solid var(--brand); }
+  .leaderboard-item.gold { background: var(--gold-bg); }
   .mini-bar { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 5px; }
   .mini-bar > div { height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .4s; }
 
@@ -178,9 +227,19 @@
   .spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
   .spinner.dark { border-color: var(--line); border-top-color: var(--brand); }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .confetti span { position: fixed; top: -20px; width: 10px; height: 14px; z-index: 200; pointer-events: none;
+                   animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
+  @media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
 </style>
 </head>
 <body>
+<div class="toolbar">
+  <button class="icon-btn" id="soundBtn" onclick="toggleSound()" title="Звук и вибрация">🔊</button>
+  <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Тёмная / светлая тема">🌙</button>
+</div>
+
 <div class="logo">
   <div class="logo-mark"><span class="drop">🍬</span>Marmalade Quiz</div>
   <div class="logo-sub">Создавай викторины и играй с друзьями</div>
@@ -282,6 +341,14 @@
       <label class="field-label" for="hostPinInput">PIN ведущего</label>
       <input type="password" id="hostPinInput" placeholder="PIN, который вы задали при создании" autocomplete="off"
              onkeydown="if(event.key==='Enter') hostOpenRoom()">
+      <label class="field-label">Режим игры</label>
+      <div class="mode-pick">
+        <label class="mode-opt"><input type="radio" name="gameMode" value="self" checked>
+          <span><b>🏃 Каждый в своём темпе</b><small>Игроки сами идут по вопросам. Меньше нагрузка на связь, подходит для большого класса.</small></span></label>
+        <label class="mode-opt"><input type="radio" name="gameMode" value="sync">
+          <span><b>🎬 Все вместе</b><small>Вопросы переключает ведущий, у всех одновременно — как в Kahoot. Вопросы видны и на экране ведущего.</small></span></label>
+      </div>
+      <label class="check-line"><input type="checkbox" id="hostShuffle"> Перемешивать варианты ответов (у каждого игрока по-своему)</label>
       <button id="hostOpenBtn" class="btn btn-pink" onclick="hostOpenRoom()">Открыть комнату</button>
     </div>
 
@@ -302,6 +369,7 @@
       </div>
       <label class="field-label" id="hostListLabel">Игроки · 0</label>
       <div id="hostList"></div>
+      <div id="hostLive" class="hidden"></div>
       <button id="hostStartBtn" class="btn btn-green" onclick="hostStart()" disabled>Ждём игроков…</button>
       <button id="hostNewGameBtn" class="btn btn-main hidden" onclick="hostNewGame()">🔁 Новая игра (сбросить очки)</button>
     </div>
@@ -320,7 +388,7 @@
     </div>
 
     <div id="roomArea" class="hidden">
-      <div class="room-code"><small>Вы в комнате</small><div id="roomName"></div></div>
+      <div class="room-code"><small>Вы в комнате</small><div id="roomName"></div><small id="modeInfo"></small></div>
       <label class="field-label">Игроки в сети · <span id="playersCount">0</span></label>
       <div id="playersList" class="players"></div>
       <div class="wait" id="waitText"><span class="dots"><span></span><span></span><span></span></span> <span id="waitLabel">Ожидаем, когда ведущий начнёт игру…</span></div>
@@ -342,8 +410,10 @@
     </div>
     <div id="gameImageArea"></div>
     <p id="qTextDisplay" class="q-text"></p>
+    <div id="syncInfo"></div>
     <div id="optionsArea" class="options-grid"></div>
     <div id="feedback" class="feedback"></div>
+    <div id="syncBoard"></div>
     <button class="btn btn-ghost" style="margin-top:16px;" onclick="goToMenu()">← Выйти в меню</button>
   </div>
 
@@ -365,7 +435,7 @@
   // Адрес сайта для QR-кода
   const SITE_URL = 'https://asatullaev1999-maker.github.io/Quiz/';
 
-  // ---- настройки баллов и времени ----
+  // ---- настройки баллов и времени (должны совпадать с Code.gs) ----
   const MAX_POINTS = 100;     // за мгновенный верный ответ
   const MIN_POINTS = 10;      // за верный ответ в самую последнюю секунду
   const DEFAULT_TIME = 20;    // секунд, если у вопроса время не задано
@@ -376,10 +446,11 @@
   const SHAPES = ['▲', '◆', '●', '■', '★', '♥'];
   const AVATAR_COLORS = ['#e21b3c', '#1368ce', '#e0a100', '#22a35a', '#0aa3a3', '#864cbf', '#f72fa0'];
   const MEDALS = ['🥇', '🥈', '🥉'];
-  const KEY = { name: 'marmalade_player_name', session: 'marmalade_session', draft: 'marmalade_draft', pins: 'marmalade_pins' };
+  const KEY = { name: 'marmalade_player_name', session: 'marmalade_session', draft: 'marmalade_draft', pins: 'marmalade_pins',
+                theme: 'marmalade_theme', sound: 'marmalade_sound', hostOpts: 'marmalade_hostopts' };
 
   // S — всё, что нужно, чтобы вернуться на то же место после обновления страницы
-  // { screen, testId, gameId, qIdx, score, pin }
+  // { screen, testId, gameId, mode, shuffle, qIdx, score, correct, pin, pending, ansQ, choice, revealed, ... }
   let S = { screen: 'menu' };
   // постоянный скрытый ID этого устройства — чтобы игроки с одинаковыми именами не путались
   const PID = (() => {
@@ -389,7 +460,20 @@
       return id;
     } catch (e) { return Math.random().toString(36).slice(2); }
   })();
-  let questions = [], pages = [], activePageIndex = 0, pollTimer = null, answering = false;
+  // Публичный id игрока = хэш от PID (тот же алгоритм, что в Code.gs). По нему находим себя в списке.
+  function hash53(str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  const MYID = hash53(PID);
+  let questions = [], pages = [], activePageIndex = 0, pollTimer = null, tickTimer = null, answering = false;
 
   // ---------- утилиты ----------
   const $ = id => document.getElementById(id);
@@ -426,6 +510,16 @@
     // небольшой случайный разброс, чтобы 30 телефонов не стучались в одну и ту же секунду
     pollTimer = setInterval(tick, ms + Math.floor(Math.random() * 1000));
   }
+  // быстрый локальный «тик» отрисовки (таймеры) — работает вместе с опросом
+  function startTick(fn, ms) {
+    if (tickTimer) clearInterval(tickTimer);
+    fn();
+    tickTimer = setInterval(fn, ms);
+  }
+  function stopPoll() {
+    if (pollTimer) clearInterval(pollTimer); pollTimer = null;
+    if (tickTimer) clearInterval(tickTimer); tickTimer = null;
+  }
   // Меняем содержимое только если оно действительно изменилось — без мигания
   function setHTML(el, html) {
     if (el.dataset.html === html) return;
@@ -433,7 +527,6 @@
     el.innerHTML = html;
   }
   function setText(el, text) { if (el.textContent !== String(text)) el.textContent = text; }
-  function stopPoll() { if (pollTimer) clearInterval(pollTimer); pollTimer = null; }
 
   function avatarColor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AVATAR_COLORS[h % AVATAR_COLORS.length]; }
   function avatar(name) { return `<span class="avatar" style="background:${avatarColor(name)}">${esc(String(name || '?').trim().charAt(0).toUpperCase())}</span>`; }
@@ -446,6 +539,70 @@
     return false;
   }
   function setBtn(btn, busy, label) { delete btn.dataset.html; btn.disabled = busy; btn.innerHTML = busy ? `<span class="spinner"></span> ${label}` : label; }
+
+  // ---------- часы сервера ----------
+  // В режиме «все вместе» все ориентируются на время сервера, а не на свои часы
+  let srvOffset = 0;
+  function noteTime(d) { if (d && typeof d.now === 'number') srvOffset = d.now - Date.now(); }
+  const srvNow = () => Date.now() + srvOffset;
+
+  // ---------- тема, звук, вибрация ----------
+  function systemDark() { return !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); }
+  function isDark() { const t = load(KEY.theme, null); return t ? t === 'dark' : systemDark(); }
+  function applyTheme() {
+    const t = load(KEY.theme, null);
+    if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    $('themeBtn').textContent = isDark() ? '☀️' : '🌙';
+  }
+  function toggleTheme() { store(KEY.theme, isDark() ? 'light' : 'dark'); applyTheme(); }
+
+  let soundOn = load(KEY.sound, true) !== false;
+  function updateSoundBtn() { $('soundBtn').textContent = soundOn ? '🔊' : '🔇'; }
+  function toggleSound() { soundOn = !soundOn; store(KEY.sound, soundOn); updateSoundBtn(); if (soundOn) sfx('tap'); }
+
+  let AC = null;
+  function tone(freq, dur, type = 'sine', vol = 0.15, delay = 0) {
+    if (!soundOn) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+      const o = AC.createOscillator(), g = AC.createGain();
+      const t = AC.currentTime + delay;
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(AC.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+  const SFX = {
+    tap()   { tone(520, 0.07, 'sine', 0.12); },
+    tick()  { tone(980, 0.05, 'square', 0.04); },
+    start() { tone(440, 0.1, 'triangle', 0.12); tone(660, 0.14, 'triangle', 0.12, 0.1); },
+    right() { tone(660, 0.12, 'sine', 0.16); tone(880, 0.22, 'sine', 0.16, 0.12); },
+    wrong() { tone(200, 0.32, 'sawtooth', 0.09); },
+    win()   { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.28, 'triangle', 0.15, i * 0.15)); }
+  };
+  function sfx(name) { try { SFX[name] && SFX[name](); } catch (e) {} }
+  // вибрация работает в мобильных браузерах, которые её поддерживают (Chrome на Android); в iPhone её нет
+  function vib(pattern) { if (soundOn && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} } }
+  function confetti() {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'confetti';
+    const colors = ['#f72fa0', '#ffb800', '#22a35a', '#1368ce', '#7b2ff7', '#e21b3c'];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('span');
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.background = colors[i % colors.length];
+      p.style.animationDuration = (2.5 + Math.random() * 2.5) + 's';
+      p.style.animationDelay = Math.random() * 0.8 + 's';
+      p.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+      wrap.appendChild(p);
+    }
+    document.body.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 6500);
+  }
 
   // ---------- запросы к таблице ----------
   // Ответ скрипта всегда должен быть JSON. Если пришла HTML-страница — значит
@@ -498,7 +655,7 @@
     }
     try {
       const p = await apiGet({ action: 'ping' });
-      if (!p.version || p.version < 3) return 'По ссылке WEB_APP_URL работает старая версия скрипта. Вставьте новый Code.gs и разверните «Новую версию» (или обновите ссылку на сайте).';
+      if (!p.version || p.version < 7) return 'По ссылке WEB_APP_URL работает старая версия скрипта. Вставьте новый Code.gs и разверните «Новую версию» (или обновите ссылку на сайте).';
       return 'Связь со скриптом есть, но запрос не прошёл. Попробуйте ещё раз.';
     } catch (e) {
       return 'Нет связи со скриптом. Проверьте интернет и ссылку WEB_APP_URL.';
@@ -516,7 +673,6 @@
     }
   }
 
-  // ---------- старт и восстановление после обновления ----------
   // ---------- QR-код на сайт ----------
   function drawQr(el) {
     if (!el || el.dataset.done) return;
@@ -537,7 +693,10 @@
     drawQr($('hostQr'));
   }
 
+  // ---------- старт и восстановление после обновления ----------
   window.onload = async function () {
+    applyTheme();
+    updateSoundBtn();
     initQr();
     try { $('playerName').value = localStorage.getItem(KEY.name) || ''; } catch (e) {}
     S = load(KEY.session, { screen: 'menu' });
@@ -545,7 +704,6 @@
     // без имени игровые экраны не восстановить
     if (!getName() && ['lobby', 'game', 'results', 'host'].includes(S.screen)) S = { screen: 'menu' };
 
-    if (S.scorePending && ['game', 'results'].includes(S.screen)) { scoreDirty = true; setTimeout(flushScore, 500); }
     try {
       switch (S.screen) {
         case 'creator': openCreator(); break;
@@ -563,10 +721,18 @@
   function goToMenu() {
     stopPoll();
     stopTimer();
-    setSession({ screen: 'menu', testId: null, gameId: null, qIdx: 0, score: 0, pin: null });
+    SRV = null; SV = { key: '' }; HV = { key: '' };
+    setSession({ screen: 'menu', testId: null, gameId: null, qIdx: 0, score: 0, correct: 0, pin: null,
+                 pending: null, ansQ: null, choice: null, revealed: null });
     $('roomArea').classList.add('hidden');
     $('pickArea').classList.remove('hidden');
     showScreen('screen-menu');
+  }
+
+  // Игрока исключил ведущий
+  function handleKicked() {
+    toast('Ведущий исключил вас из игры', 'err');
+    goToMenu();
   }
 
   // ---------- конструктор ----------
@@ -794,13 +960,75 @@
     }
   }
 
+  // ---------- таблицы лидеров ----------
+  function rankOf(players, id) {
+    const me = (players || []).find(p => p.id === id);
+    if (!me) return null;
+    return { rank: 1 + players.filter(p => p.score > me.score).length, of: players.length, me };
+  }
+
+  // by: 'score' — топ по баллам, 'correct' — топ по числу правильных ответов
+  // opts: { sync, limit, kick }
+  function renderBoard(players, total, meId, by = 'score', opts = {}) {
+    const byCorrect = by === 'correct';
+    let list = players.slice().sort((a, b) => byCorrect
+      ? ((b.correct || 0) - (a.correct || 0)) || (b.score - a.score) || (b.answered - a.answered)
+      : (b.score - a.score) || ((b.correct || 0) - (a.correct || 0)) || (b.answered - a.answered));
+    if (opts.limit) list = list.slice(0, opts.limit);
+    return list.map((p, idx) => {
+      const right = p.correct || 0;
+      const isMe = !!meId && p.id === meId;
+      const progress = opts.sync ? '' : (p.finished ? '✓ закончил(а)' : `ответил(а) ${p.answered} из ${total || '?'}`);
+      const status = [progress, byCorrect ? `${p.score} б.` : `верных: ${right}`].filter(Boolean).join(' · ');
+      const lead = byCorrect ? right : p.score;
+      const kick = opts.kick ? `<button class="kick" title="Исключить из игры" data-name="${esc(p.name)}" onclick="hostKick(this.dataset.name)">✕</button>` : '';
+      return `
+        <div class="leaderboard-item ${isMe ? 'me' : ''} ${idx === 0 && lead > 0 ? 'gold' : ''}">
+          <span class="place">${MEDALS[idx] || idx + 1}</span>
+          ${avatar(p.name)}
+          <span class="name">${esc(p.name)}${isMe ? ' (вы)' : ''}
+            <small>${status}</small>
+            ${(opts.sync || p.finished) ? '' : `<div class="mini-bar"><div style="width:${total ? Math.round(p.answered / total * 100) : 0}%"></div></div>`}
+          </span>
+          <b>${byCorrect ? `${right}${total ? ' из ' + total : ''} ✓` : p.score + ' б.'}</b>
+          ${kick}
+        </div>`;
+    }).join('');
+  }
+
+  // два списка: по баллам и по правильным ответам
+  function renderBoards(players, total, meId, skipFirstTitle, opts = {}) {
+    if (!players.length) return '';
+    const title = t => `<label class="field-label">${t}</label>`;
+    return (skipFirstTitle ? '' : title('🏆 Топ по баллам'))
+      + renderBoard(players, total, meId, 'score', opts)
+      + title('🎯 Топ по правильным ответам')
+      + renderBoard(players, total, meId, 'correct', Object.assign({}, opts, { kick: false }));
+  }
+
+  // фаза вопроса в режиме «все вместе», по времени сервера
+  function phaseOf(d, now) {
+    if (d.reveal) return 'reveal';
+    if (now < d.qStartAt) return 'lead';
+    if (now < d.qDeadline) return 'question';
+    return 'counting';
+  }
+
   // ---------- ведущий ----------
+  let SRV = null;          // последний ответ getRoomStatus (для режима «все вместе»)
+  let HV = { key: '' };    // что сейчас нарисовано на экране ведущего
+  let SV = { key: '' };    // что сейчас нарисовано на экране игрока
+
   async function openHostScreen(preselect) {
     if (!requireName()) return;
     stopPoll();
     setSession({ screen: 'host', testId: null, pin: null, gameId: null });
     $('hostPick').classList.remove('hidden');
     $('hostRoom').classList.add('hidden');
+    const o = load(KEY.hostOpts, { mode: 'self', shuffle: false });
+    const radio = document.querySelector(`input[name="gameMode"][value="${o.mode === 'sync' ? 'sync' : 'self'}"]`);
+    if (radio) radio.checked = true;
+    $('hostShuffle').checked = !!o.shuffle;
     showScreen('screen-host');
     await loadTestsInto($('hostTestSelect'), preselect);
     fillHostPin();
@@ -815,13 +1043,16 @@
     const testId = $('hostTestSelect').value, pin = $('hostPinInput').value.trim();
     if (!testId) { toast('Выберите тест', 'err'); return; }
     if (!pin) { toast('Введите PIN ведущего', 'err'); $('hostPinInput').focus(); return; }
+    const mode = document.querySelector('input[name="gameMode"]:checked').value;
+    const shuffle = $('hostShuffle').checked;
     const btn = $('hostOpenBtn');
     setBtn(btn, true, 'Открываем…');
     try {
-      const r = await apiPostRetry({ action: 'openRoom', testId, pin });
+      const r = await apiPostRetry({ action: 'openRoom', testId, pin, mode, shuffle });
       if (!r.ok) { toast(r.error || 'Не удалось открыть комнату', 'err'); return; }
       const pins = load(KEY.pins, {}); pins[testId] = pin; store(KEY.pins, pins);
-      setSession({ screen: 'host', testId, pin, gameId: r.gameId, code: r.code });
+      store(KEY.hostOpts, { mode, shuffle });
+      setSession({ screen: 'host', testId, pin, gameId: r.gameId, code: r.code, mode: r.mode || mode, shuffle: !!r.shuffle });
       showHostRoom();
     } catch (e) {
       toast(await diagnose(e), 'err');
@@ -832,30 +1063,39 @@
 
   function showHostRoom() {
     showScreen('screen-host');
+    SRV = null; HV = { key: '' };
     $('hostPick').classList.add('hidden');
     $('hostRoom').classList.remove('hidden');
-    $('hostRoomName').textContent = 'Тест: ' + S.testId;
+    $('hostRoomName').textContent = 'Тест: ' + S.testId + (S.mode === 'sync' ? ' · 🎬 все вместе' : ' · 🏃 каждый в своём темпе');
     $('hostRoomCode').textContent = S.code || '······';
     setHTML($('hostList'), '<div class="wait"><span class="spinner dark"></span></div>');
-    startPoll(hostPoll, 3000);
+    startPoll(hostPoll, 2000);
+    startTick(() => { if (SRV && SRV.started && SRV.mode === 'sync') hostRenderSync(); }, 250);
   }
 
   async function hostPoll() {
     let d;
     try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); } catch (e) { return; }
+    noteTime(d);
     if (!d.exists) { $('hostStatus').textContent = 'Комната закрыта'; return; }
-    if (d.gameId !== S.gameId || d.code !== S.code) setSession({ gameId: d.gameId, code: d.code });
+    SRV = d;
+    if (d.gameId !== S.gameId || d.code !== S.code || d.mode !== S.mode) setSession({ gameId: d.gameId, code: d.code, mode: d.mode, shuffle: d.shuffle });
     setText($('hostRoomCode'), d.code || '······');
+    setText($('hostRoomName'), 'Тест: ' + S.testId + (d.mode === 'sync' ? ' · 🎬 все вместе' : ' · 🏃 каждый в своём темпе'));
 
     const players = d.players || [];
     const finished = players.filter(p => p.finished).length;
     const startBtn = $('hostStartBtn');
+    const live = $('hostLive');
 
     if (!d.started) {
+      live.classList.add('hidden'); HV = { key: '' };
+      $('hostList').classList.remove('hidden'); $('hostListLabel').classList.remove('hidden');
+      $('hostQrBox').classList.remove('hidden');
       setText($('hostStatus'), 'Набор игроков');
       setText($('hostListLabel'), `Игроки · ${players.length}`);
       setHTML($('hostList'), players.length
-        ? `<div class="players">${players.map(p => `<span class="player-tag">${avatar(p.name)}${esc(p.name)}</span>`).join('')}</div>`
+        ? `<div class="players">${players.map(p => `<span class="player-tag">${avatar(p.name)}${esc(p.name)}<button class="kick" title="Исключить" data-name="${esc(p.name)}" onclick="hostKick(this.dataset.name)">✕</button></span>`).join('')}</div>`
         : '<div class="wait"><span class="dots"><span></span><span></span><span></span></span> Ждём, когда игроки зайдут в комнату…</div>');
       startBtn.classList.remove('hidden');
       if (!startBtn.dataset.busy) {
@@ -864,13 +1104,110 @@
       }
       $('hostNewGameBtn').classList.add('hidden');
     } else {
-      setText($('hostStatus'), (players.length && finished === players.length)
-        ? 'Игра завершена 🎉' : `Игра идёт · закончили ${finished} из ${players.length}`);
-      setText($('hostListLabel'), 'Топ игроков (обновляется сам)');
-      setHTML($('hostList'), renderBoard(players, d.total, null) || '<p class="empty">Нет игроков</p>');
+      $('hostQrBox').classList.add('hidden');
       startBtn.classList.add('hidden');
       $('hostNewGameBtn').classList.remove('hidden');
+      if (d.mode === 'sync') {
+        $('hostList').classList.add('hidden'); $('hostListLabel').classList.add('hidden');
+        live.classList.remove('hidden');
+        setText($('hostStatus'), d.done ? 'Игра завершена 🎉' : `Игра идёт · вопрос ${Math.max(1, d.qIdx + 1)} из ${d.total}`);
+        hostRenderSync();
+      } else {
+        live.classList.add('hidden');
+        $('hostList').classList.remove('hidden'); $('hostListLabel').classList.remove('hidden');
+        setText($('hostStatus'), (players.length && finished === players.length)
+          ? 'Игра завершена 🎉' : `Игра идёт · закончили ${finished} из ${players.length}`);
+        setText($('hostListLabel'), '🏆 Топ по баллам (обновляется сам)');
+        setHTML($('hostList'), renderBoards(players, d.total, null, true, { kick: true }) || '<p class="empty">Нет игроков</p>');
+      }
     }
+  }
+
+  function tilesHTML(q, rev) {
+    return '<div class="tiles">' + q.options.map((o, i) => {
+      const cls = rev ? (i === rev.correctIdx ? ' right' : ' dim') : '';
+      return `<div class="opt-tile c-${i % 6}${cls}"><span class="shape">${SHAPES[i % 6]}</span><span class="t">${esc(o)}</span>${rev ? `<b class="cnt">${rev.counts[i] || 0}</b>` : ''}</div>`;
+    }).join('') + '</div>';
+  }
+
+  // Экран ведущего в режиме «все вместе»: вопрос, варианты, таймер, ответы и кнопки управления
+  function hostRenderSync() {
+    const d = SRV, box = $('hostLive');
+    if (!d || !d.started || d.mode !== 'sync') return;
+    const players = d.players || [], now = srvNow();
+
+    if (d.done) {
+      HV.key = 'done';
+      setHTML(box, '<h3 style="text-align:center">🏁 Игра завершена</h3>' + (renderBoards(players, d.total, null, false, { sync: true, kick: false }) || ''));
+      return;
+    }
+    if (!d.q || d.qIdx < 0) {
+      if (HV.key !== 'wait') { HV.key = 'wait'; setHTML(box, '<div class="wait"><span class="spinner dark"></span> Запускаем первый вопрос…</div>'); }
+      return;
+    }
+    const q = d.q, i = d.qIdx, ph = phaseOf(d, now), key = i + ':' + ph;
+    if (HV.key !== key) {
+      HV.key = key;
+      const head = `<div class="live-top"><span>Вопрос ${i + 1} из ${d.total}</span><span class="score-pill">👥 ${players.length}</span></div>
+                    <div class="progress"><div style="width:${Math.round(i / d.total * 100)}%"></div></div>`;
+      const img = q.imageUrl ? `<div class="live-img"><img src="${esc(q.imageUrl)}" alt=""></div>` : '';
+      const qt = `<p class="q-text">${esc(q.question)}</p>`;
+      let html;
+      if (ph === 'lead') {
+        html = head + '<div class="big-count" id="hlCount">…</div><p class="hint">Игроки читают вопрос — варианты появятся через пару секунд</p>' + img + qt;
+      } else if (ph === 'question') {
+        html = head + `<div class="timer-row" id="hlTimerRow"><div class="timer-num" id="hlNum">${q.time}</div>
+                 <div class="timer-track"><div id="hlBar"></div></div></div>`
+             + img + qt + tilesHTML(q, null)
+             + '<p class="hint" id="hlAnswered" style="margin-top:0"></p>'
+             + '<button class="btn btn-ghost" onclick="hostCtl(\'endQuestion\')">⏭ Показать ответ сейчас</button>';
+      } else if (ph === 'counting') {
+        html = head + img + qt + tilesHTML(q, null) + '<div class="wait"><span class="spinner dark"></span> Подводим итоги…</div>';
+      } else {
+        const last = i + 1 >= d.total;
+        html = head + qt + tilesHTML(q, d.reveal)
+             + '<label class="field-label">🏆 Топ-5</label>' + renderBoard(players, d.total, null, 'score', { sync: true, limit: 5 })
+             + (last
+                 ? '<button class="btn btn-pink" onclick="hostCtl(\'finishGame\')">🏁 Показать итоги</button>'
+                 : '<button class="btn btn-green" onclick="hostCtl(\'nextQuestion\')">Следующий вопрос ▶</button>');
+      }
+      setHTML(box, html);
+    }
+    if (ph === 'lead') setText($('hlCount'), Math.max(1, Math.ceil((d.qStartAt - now) / 1000)));
+    if (ph === 'question') {
+      const left = Math.max(0, d.qDeadline - now), sec = Math.ceil(left / 1000), row = $('hlTimerRow');
+      setText($('hlNum'), sec);
+      $('hlBar').style.width = Math.min(100, left / (q.time * 1000) * 100) + '%';
+      row.classList.toggle('danger', sec <= 3);
+      row.classList.toggle('warn', sec > 3 && left / (q.time * 1000) <= 0.4);
+      const answered = players.filter(p => p.lastQ === i).length;
+      setText($('hlAnswered'), `Ответили: ${answered} из ${players.length}`);
+    }
+  }
+
+  let hostCtlBusy = false;
+  async function hostCtl(action) {
+    if (hostCtlBusy) return;
+    hostCtlBusy = true;
+    try {
+      const r = await apiPostRetry({ action, testId: S.testId, pin: S.pin, fromIdx: SRV ? SRV.qIdx : null });
+      if (!r.ok) toast(r.error || 'Ошибка', 'err');
+    } catch (e) {
+      toast(await diagnose(e), 'err');
+    } finally {
+      hostCtlBusy = false;
+      hostPoll();
+    }
+  }
+
+  async function hostKick(name) {
+    if (!confirm(`Исключить «${name}» из игры?`)) return;
+    try {
+      const r = await apiPostRetry({ action: 'kick', testId: S.testId, pin: S.pin, name });
+      if (!r.ok) toast(r.error || 'Не удалось исключить', 'err');
+      else toast(`«${name}» исключён(а)`, 'ok');
+    } catch (e) { toast(await diagnose(e), 'err'); }
+    hostPoll();
   }
 
   async function hostStart() {
@@ -892,8 +1229,9 @@
   async function hostNewGame() {
     if (!confirm('Начать новую игру? Текущие очки обнулятся, игрокам нужно будет снова зайти в комнату.')) return;
     try {
-      const r = await apiPostRetry({ action: 'openRoom', testId: S.testId, pin: S.pin });
+      const r = await apiPostRetry({ action: 'openRoom', testId: S.testId, pin: S.pin, mode: S.mode || 'self', shuffle: !!S.shuffle });
       if (!r.ok) { toast(r.error, 'err'); return; }
+      HV = { key: '' }; SRV = null;
       setSession({ gameId: r.gameId });
       hostPoll();
     } catch (e) { toast(await diagnose(e), 'err'); }
@@ -938,6 +1276,7 @@
     $('waitLabel').textContent = 'Подключаемся…';
     try {
       const r = await apiPostRetry({ action: 'joinRoom', testId, player: getName(), pid: PID });
+      if (r.kicked) { handleKicked(); return; }
       if (!r.ok) {
         // комната закрыта — подождём, ведущий может открыть её снова
         setSession({ screen: 'lobby', testId, gameId: null });
@@ -956,25 +1295,82 @@
 
   function afterJoin(r) {
     stopPoll();
-    setSession({ screen: 'lobby', testId: r.testId, gameId: r.gameId, qIdx: 0, score: 0, correct: 0, total: 0, scorePending: false, qStartIdx: null, qStartAt: null });
+    const me = r.me || {};
+    // прогресс берём с сервера — он надёжнее, чем память телефона
+    setSession({ screen: 'lobby', testId: r.testId, gameId: r.gameId, mode: r.mode || 'self', shuffle: !!r.shuffle,
+                 qIdx: me.answered || 0, score: me.score || 0, correct: me.correct || 0, total: null,
+                 pending: null, qStartIdx: null, qStartAt: null, ansQ: null, choice: null, revealed: null, celebrated: null });
     showScreen('screen-lobby');
     $('pickArea').classList.add('hidden');
     $('roomArea').classList.remove('hidden');
     $('roomName').textContent = r.testId;
+    $('modeInfo').textContent = r.mode === 'sync' ? '🎬 Все вместе: вопросы переключает ведущий' : '🏃 Каждый отвечает в своём темпе';
     $('waitLabel').textContent = 'Ожидаем, когда ведущий начнёт игру…';
+    if (r.done) { showResults(); return; }
     if (r.started) { startGame(); return; }
-    startPoll(checkRoomStatus, 4000);
+    startPoll(checkRoomStatus, 3000);
   }
 
   async function checkRoomStatus() {
     let d;
     try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); } catch (e) { return; }
+    noteTime(d);
     if (!d.exists) { setText($('waitLabel'), 'Ведущий ещё не открыл эту комнату…'); return; }
+    if ((d.kicked || []).includes(MYID)) { handleKicked(); return; }
     if (d.gameId !== S.gameId) { enterRoom(S.testId); return; } // ведущий открыл комнату заново
     const players = d.players || [];
     setText($('playersCount'), players.length);
     setHTML($('playersList'), players.map(p => `<span class="player-tag">${avatar(p.name)}${esc(p.name)}</span>`).join(''));
-    if (d.started) { stopPoll(); startGame(); }
+    if (d.started) { setSession({ mode: d.mode, shuffle: d.shuffle }); stopPoll(); startGame(); }
+  }
+
+  // ---------- игрок: общее для обоих режимов ----------
+  // У каждого игрока свой порядок вариантов (если ведущий включил перемешивание), но он не меняется при обновлении
+  function optionOrder(n, qIdx) {
+    const order = Array.from({ length: n }, (_, i) => i);
+    if (!S.shuffle) return order;
+    let s = parseInt(hash53(PID + ':' + (S.gameId || '') + ':' + qIdx), 36) >>> 0;
+    const rnd = () => {
+      s = (s + 0x6D2B79F5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    return order;
+  }
+
+  // handler(origIdx) — клик; без handler кнопки неактивны
+  function drawOptions(q, idx, handler) {
+    const area = $('optionsArea');
+    area.innerHTML = '';
+    optionOrder(q.options.length, idx).forEach((orig, pos) => {
+      const btn = document.createElement('button');
+      btn.className = `option-btn c-${pos % 6}`;
+      btn.dataset.orig = orig;
+      btn.innerHTML = `<span class="shape">${SHAPES[pos % 6]}</span><span></span>`;
+      btn.lastChild.textContent = q.options[orig];
+      if (handler) btn.onclick = () => handler(orig); else btn.disabled = true;
+      area.appendChild(btn);
+    });
+  }
+
+  // picked — выбранный вариант (или null), correct — правильный (или null, пока он неизвестен)
+  function markOptions(picked, correct) {
+    document.querySelectorAll('#optionsArea .option-btn').forEach(b => {
+      const o = Number(b.dataset.orig);
+      b.classList.remove('right', 'wrong', 'dim', 'picked');
+      if (correct != null) { b.classList.add(o === correct ? 'right' : (o === picked ? 'wrong' : 'dim')); }
+      else if (picked != null) { b.classList.add(o === picked ? 'picked' : 'dim'); }
+    });
+  }
+
+  function setFeedback(cls, html) { const f = $('feedback'); f.className = 'feedback ' + cls; f.innerHTML = html; }
+
+  // баллы за верный ответ: 100 сразу, линейно падают до MIN_POINTS к концу времени
+  function pointsFor(elapsedMs, limitSec) {
+    const frac = Math.min(1, Math.max(0, elapsedMs / (limitSec * 1000)));
+    return Math.round(MAX_POINTS - (MAX_POINTS - MIN_POINTS) * frac);
   }
 
   // ---------- игрок: игра ----------
@@ -985,6 +1381,16 @@
     $('qTextDisplay').textContent = 'Загружаем вопросы…';
     $('optionsArea').innerHTML = '';
     $('gameImageArea').innerHTML = '';
+    $('syncInfo').innerHTML = ''; $('syncBoard').innerHTML = '';
+    $('feedback').textContent = '';
+    if (S.mode === 'sync') {
+      // все вместе: вопросы приходят вместе со статусом комнаты
+      SRV = null; SV = { key: '' };
+      $('timerRow').classList.add('hidden');
+      startPoll(syncPoll, 1800);
+      startTick(syncRender, 150);
+      return;
+    }
     try {
       questions = await apiGet({ action: 'getQuestions', testId: S.testId });
       if (!Array.isArray(questions) || !questions.length) throw new Error();
@@ -1001,24 +1407,29 @@
     showScreen('screen-game');
     $('qTextDisplay').textContent = 'Возвращаемся в игру…';
     const d = await apiGet({ action: 'getRoomStatus', testId: S.testId });
+    noteTime(d);
     if (!d.exists) { toast('Комната закрыта', 'err'); goToMenu(); return; }
+    if ((d.kicked || []).includes(MYID)) { handleKicked(); return; }
     if (d.gameId !== S.gameId || !d.started) { showScreen('screen-lobby'); enterRoom(S.testId); return; }
+    setSession({ mode: d.mode, shuffle: d.shuffle });
     await startGame();
   }
 
-  // ---------- таймер ----------
-  let timerId = null;
+  // ---------- таймер (режим «в своём темпе») ----------
+  let timerId = null, lastTickSec = null;
   function stopTimer() { if (timerId) clearInterval(timerId); timerId = null; }
-
-  // баллы за верный ответ: 100 сразу, линейно падают до MIN_POINTS к концу времени
-  function pointsFor(elapsedMs, limitSec) {
-    const frac = Math.min(1, Math.max(0, elapsedMs / (limitSec * 1000)));
-    return Math.round(MAX_POINTS - (MAX_POINTS - MIN_POINTS) * frac);
-  }
   function elapsedMs() { return Math.max(0, Date.now() - (S.qStartAt || Date.now())); }
+
+  function timerClasses(sec, frac) {
+    const row = $('timerRow');
+    row.classList.toggle('danger', sec <= 3);
+    row.classList.toggle('warn', sec > 3 && frac <= 0.4);
+    if (sec <= 3 && sec > 0 && sec !== lastTickSec) { lastTickSec = sec; sfx('tick'); vib(15); }
+  }
 
   function startTimer(q) {
     stopTimer();
+    lastTickSec = null;
     const limit = qTimeOf(q);
     const tick = () => {
       const el = elapsedMs();
@@ -1027,36 +1438,23 @@
       setText($('timerNum'), sec);
       $('timerBar').style.width = (left / (limit * 1000) * 100) + '%';
       setText($('ptsNow'), left > 0 ? pointsFor(el, limit) + ' б.' : '0 б.');
-      const row = $('timerRow');
-      row.classList.toggle('danger', sec <= 3);
-      row.classList.toggle('warn', sec > 3 && left / (limit * 1000) <= 0.4);
+      timerClasses(sec, left / (limit * 1000));
       if (left <= 0) { stopTimer(); timeUp(q); }
     };
     tick();
     if (!answering) timerId = setInterval(tick, 100);
   }
 
-  function timeUp(q) {
-    if (answering) return;
-    answering = true;
-    setSession({ qIdx: S.qIdx + 1, qStartAt: null });
-    queueScore();
-    document.querySelectorAll('#optionsArea .option-btn').forEach((b, i) => {
-      b.classList.add(i == q.correct ? 'right' : 'dim');
-    });
-    $('feedback').className = 'feedback bad';
-    $('feedback').innerHTML = '⏰ Время вышло!<small>0 баллов</small>';
-    setTimeout(renderQuestion, 1800);
-  }
-
   function renderQuestion() {
     stopTimer();
+    if (S.screen !== 'game') return;
     if (S.qIdx >= questions.length) { finishGame(); return; }
     answering = false;
     const q = questions[S.qIdx];
     // время старта вопроса запоминаем — после обновления страницы таймер не начнётся заново
     if (S.qStartIdx !== S.qIdx || !S.qStartAt) setSession({ qStartIdx: S.qIdx, qStartAt: Date.now() });
-    $('timerRow').classList.remove('warn', 'danger');
+    $('timerRow').classList.remove('hidden', 'warn', 'danger');
+    $('syncInfo').innerHTML = '';
     $('qNum').innerText = `Вопрос ${S.qIdx + 1} из ${questions.length}`;
     $('liveScore').innerText = S.score;
     $('progressBar').style.width = (S.qIdx / questions.length * 100) + '%';
@@ -1064,134 +1462,265 @@
     $('feedback').className = 'feedback';
     $('feedback').textContent = '';
     $('gameImageArea').innerHTML = q.imageUrl ? `<img src="${esc(q.imageUrl)}" alt="">` : '';
-
-    const area = $('optionsArea');
-    area.innerHTML = '';
-    q.options.forEach((opt, idx) => {
-      const btn = document.createElement('button');
-      btn.className = `option-btn c-${idx % 6}`;
-      btn.innerHTML = `<span class="shape">${SHAPES[idx % 6]}</span><span></span>`;
-      btn.lastChild.textContent = opt;
-      btn.onclick = () => answer(idx, q);
-      area.appendChild(btn);
-    });
-    startTimer(q);
+    drawOptions(q, S.qIdx, answer);
+    // если страницу обновили, пока ответ летел на сервер — досылаем его
+    if (S.pending && S.pending.qIdx === S.qIdx) {
+      answering = true;
+      markOptions(S.pending.choice >= 0 ? S.pending.choice : null, null);
+      setFeedback('', '<span class="spinner dark" style="display:inline-block"></span><small>Проверяем ответ…</small>');
+      submitPending();
+      return;
+    }
+    startTimer(questions[S.qIdx]);
   }
 
-  function answer(idx, q) {
+  // Правильный ответ знает только сервер: отправляем выбор и ждём проверку
+  function answer(orig) {
     if (answering) return;
-    const el = elapsedMs(), limit = qTimeOf(q);
+    const q = questions[S.qIdx], el = elapsedMs(), limit = qTimeOf(q);
     if (el >= limit * 1000) { stopTimer(); timeUp(q); return; }
     answering = true;
     stopTimer();
-    const isRight = idx == q.correct;
-    const pts = isRight ? pointsFor(el, limit) : 0;
-    // сохраняем сразу — если обновить страницу, ответ не потеряется и не засчитается дважды
-    setSession({ qIdx: S.qIdx + 1, score: S.score + pts, correct: (S.correct || 0) + (isRight ? 1 : 0), qStartAt: null });
-    queueScore();
+    sfx('tap'); vib(25);
+    setSession({ pending: { qIdx: S.qIdx, choice: orig, elapsed: Math.round(el) } });
+    markOptions(orig, null);
+    setFeedback('', '<span class="spinner dark" style="display:inline-block"></span><small>Проверяем ответ…</small>');
+    submitPending();
+  }
 
-    document.querySelectorAll('#optionsArea .option-btn').forEach((b, i) => {
-      if (i == q.correct) b.classList.add('right');
-      else if (i === idx) b.classList.add('wrong');
-      else b.classList.add('dim');
-    });
-    $('feedback').className = 'feedback ' + (isRight ? 'ok' : 'bad');
-    $('feedback').innerHTML = isRight
-      ? `✅ Верно! +${pts}<small>ответ за ${(el / 1000).toFixed(1)} сек</small>`
-      : '❌ Неверно<small>0 баллов</small>';
+  function timeUp(q) {
+    if (answering) return;
+    answering = true;
+    stopTimer();
+    setSession({ pending: { qIdx: S.qIdx, choice: -1, elapsed: qTimeOf(q) * 1000 } });
+    markOptions(null, null);
+    setFeedback('bad', '⏰ Время вышло!<small>Проверяем…</small>');
+    submitPending();
+  }
+
+  let submitting = false;
+  async function submitPending() {
+    if (submitting || !S.pending) return;
+    submitting = true;
+    const p = S.pending;
+    try {
+      for (;;) {
+        let r = null;
+        try {
+          r = await apiPostRetry({ action: 'answer', testId: S.testId, gameId: S.gameId, player: getName(), pid: PID,
+                                   qIdx: p.qIdx, choice: p.choice, elapsed: p.elapsed }, 3);
+        } catch (e) { r = null; } // нет связи — просто пробуем ещё, сервер не засчитает ответ дважды
+        if (r && r.ok) { applyResult(r, p); return; }
+        if (r && r.kicked) { handleKicked(); return; }
+        if (r && r.resync) { setSession({ pending: null, qIdx: r.answered, score: r.score, correct: r.correct }); renderQuestion(); return; }
+        if (r && (r.stale || r.closed || r.conflict || r.notJoined)) {
+          setSession({ pending: null });
+          toast(r.stale ? 'Ведущий начал новую игру — зайдите в комнату заново' : (r.error || 'Игра недоступна'), 'err');
+          goToMenu();
+          return;
+        }
+        if (r && !r.busy && r.error) { // непонятная ошибка сервера (например, старая версия скрипта)
+          setSession({ pending: null });
+          toast(r.error === 'Неизвестное действие' ? await diagnose() : r.error, 'err');
+          goToMenu();
+          return;
+        }
+        await sleep(2000);
+        if (S.screen !== 'game' || !S.pending) return;
+      }
+    } finally { submitting = false; }
+  }
+
+  function applyResult(r, p) {
+    const prev = S.score || 0;
+    const right = r.right != null ? r.right : (p.choice >= 0 && p.choice === r.correctIdx);
+    const pts = r.pts != null ? r.pts : Math.max(0, r.score - prev);
+    setSession({ pending: null, qIdx: r.answered, score: r.score, correct: r.correct, qStartAt: null });
+    if (S.screen !== 'game') return;
+    markOptions(p.choice >= 0 ? p.choice : null, r.correctIdx);
+    if (p.choice < 0) { setFeedback('bad', '⏰ Время вышло!<small>0 баллов</small>'); sfx('wrong'); vib([40, 40, 40]); }
+    else if (right) { setFeedback('ok', `✅ Верно! +${pts}<small>ответ за ${(p.elapsed / 1000).toFixed(1)} сек</small>`); sfx('right'); vib(60); }
+    else { setFeedback('bad', '❌ Неверно<small>0 баллов</small>'); sfx('wrong'); vib([40, 40, 40]); }
     $('liveScore').innerText = S.score;
-    setTimeout(renderQuestion, 1500);
+    showRankHint(S.qIdx);
+    setTimeout(renderQuestion, 1900);
+  }
+
+  // «Вы 4-й из 12» после каждого вопроса (данные берём из быстрого кэшируемого статуса)
+  async function showRankHint(at) {
+    try {
+      const d = await apiGet({ action: 'getRoomStatus', testId: S.testId });
+      noteTime(d);
+      if (S.screen !== 'game' || S.qIdx !== at) return;
+      const others = (d.players || []).filter(p => p.id !== MYID);
+      const rank = 1 + others.filter(p => p.score > S.score).length;
+      const fb = $('feedback');
+      if (!fb.textContent) return;
+      fb.insertAdjacentHTML('beforeend', `<small class="rank">🏅 Вы ${rank}-й из ${others.length + 1}</small>`);
+    } catch (e) {}
   }
 
   function finishGame() {
     $('progressBar').style.width = '100%';
-    queueScore();
     showResults();
   }
 
-  // ---------- отправка очков ----------
-  // Очки отправляются по одному запросу за раз; если пока шёл запрос игрок ответил ещё —
-  // отправится только последний результат. При ошибке — повтор через 3 секунды.
-  let scoreSending = false, scoreDirty = false;
-  function queueScore() {
-    setSession({ scorePending: true });
-    scoreDirty = true;
-    flushScore();
+  // ---------- игрок: режим «все вместе» ----------
+  async function syncPoll() {
+    let d;
+    try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); } catch (e) { return; }
+    noteTime(d);
+    if (!d.exists) { toast('Комната закрыта', 'err'); goToMenu(); return; }
+    if ((d.kicked || []).includes(MYID)) { handleKicked(); return; }
+    if (d.gameId !== S.gameId || !d.started) { stopPoll(); showScreen('screen-lobby'); enterRoom(S.testId); return; }
+    if (d.shuffle !== S.shuffle) setSession({ shuffle: d.shuffle });
+    SRV = d;
+    if (d.done) { stopPoll(); showResults(); return; }
+    syncRender();
   }
-  async function flushScore() {
-    if (scoreSending || !scoreDirty || !S.testId) return;
-    scoreSending = true;
-    scoreDirty = false;
-    const total = S.total || questions.length || 0;
-    const body = { action: 'saveScore', testId: S.testId, gameId: S.gameId, player: getName(), pid: PID,
-                   score: S.score, answered: S.qIdx, finished: total > 0 && S.qIdx >= total };
-    try {
-      const r = await apiPostRetry(body, 4);
-      if (r && (r.ok || r.stale || r.conflict)) { if (!scoreDirty) setSession({ scorePending: false }); }
-      else scoreDirty = true;
-    } catch (e) {
-      scoreDirty = true;
-    } finally {
-      scoreSending = false;
-      if (scoreDirty) setTimeout(flushScore, 3000);
+
+  function syncRender() {
+    const d = SRV;
+    if (!d || !S.testId || S.screen !== 'game') return;
+    const now = srvNow();
+    if (!d.q || d.qIdx < 0) {
+      if (SV.key !== 'wait') {
+        SV.key = 'wait';
+        $('timerRow').classList.add('hidden');
+        $('qTextDisplay').textContent = 'Ждём первый вопрос…';
+        $('optionsArea').innerHTML = ''; $('syncInfo').innerHTML = ''; $('syncBoard').innerHTML = ''; $('feedback').textContent = '';
+      }
+      return;
+    }
+    const idx = d.qIdx, q = d.q, ph = phaseOf(d, now), key = idx + ':' + ph;
+    if (SV.key !== key) { SV.key = key; renderSyncPhase(d, q, idx, ph); }
+    if (ph === 'lead') setText($('bigCount'), Math.max(1, Math.ceil((d.qStartAt - now) / 1000)));
+    else if (ph === 'question') {
+      const limitMs = q.time * 1000, left = Math.max(0, d.qDeadline - now), sec = Math.ceil(left / 1000);
+      setText($('timerNum'), sec);
+      $('timerBar').style.width = Math.min(100, left / limitMs * 100) + '%';
+      setText($('ptsNow'), S.ansQ === idx ? '✓' : pointsFor(Math.max(0, now - d.qStartAt), q.time) + ' б.');
+      timerClasses(sec, left / limitMs);
+    }
+  }
+
+  function renderSyncPhase(d, q, idx, ph) {
+    const answeredThis = S.ansQ === idx;
+    $('qNum').innerText = `Вопрос ${idx + 1} из ${d.total}`;
+    $('progressBar').style.width = (idx / d.total * 100) + '%';
+    $('liveScore').innerText = S.score || 0;
+    $('qTextDisplay').innerText = q.question;
+    $('gameImageArea').innerHTML = q.imageUrl ? `<img src="${esc(q.imageUrl)}" alt="">` : '';
+    $('feedback').className = 'feedback'; $('feedback').textContent = '';
+    $('syncInfo').innerHTML = ''; $('syncBoard').innerHTML = '';
+    $('timerRow').classList.toggle('hidden', ph !== 'question');
+    $('timerRow').classList.remove('warn', 'danger');
+    lastTickSec = null;
+
+    if (ph === 'lead') {
+      $('optionsArea').innerHTML = '';
+      $('syncInfo').innerHTML = '<div class="big-count" id="bigCount">…</div><p class="hint">Приготовьтесь — сейчас появятся варианты ответов</p>';
+      sfx('start');
+    } else if (ph === 'question') {
+      drawOptions(q, idx, answeredThis ? null : syncPick);
+      if (answeredThis) { markOptions(S.choice, null); setFeedback('', 'Ответ принят ✓<small>ждём остальных…</small>'); }
+    } else if (ph === 'counting') {
+      drawOptions(q, idx, null);
+      if (answeredThis) markOptions(S.choice, null);
+      setFeedback('', answeredThis ? '⏳ Подводим итоги…' : '⏰ Время вышло!<small>Подводим итоги…</small>');
+    } else {
+      renderSyncReveal(d, q, idx, answeredThis);
+    }
+  }
+
+  function renderSyncReveal(d, q, idx, answeredThis) {
+    drawOptions(q, idx, null);
+    const players = d.players || [], me = players.find(p => p.id === MYID);
+    if (me && S.revealed !== idx) {
+      const right = (me.correct || 0) > (S.correct || 0);
+      setSession({ gained: me.score - (S.score || 0), wasRight: right, score: me.score, correct: me.correct, revealed: idx });
+      if (right) { sfx('right'); vib(60); } else { sfx('wrong'); vib([40, 40, 40]); }
+    }
+    markOptions(answeredThis ? S.choice : null, d.reveal.correctIdx);
+    $('liveScore').innerText = S.score || 0;
+    const rk = rankOf(players, MYID);
+    const rank = rk ? `<small class="rank">🏅 Вы ${rk.rank}-й из ${rk.of}</small>` : '';
+    if (S.revealed === idx && S.wasRight) setFeedback('ok', `✅ Верно! +${S.gained || 0}${rank}`);
+    else if (answeredThis) setFeedback('bad', `❌ Неверно<small>0 баллов</small>${rank}`);
+    else setFeedback('bad', `⏰ Не успели<small>0 баллов</small>${rank}`);
+    $('syncBoard').innerHTML = '<label class="field-label">🏆 Топ-3</label>' + renderBoard(players, d.total, MYID, 'score', { sync: true, limit: 3 });
+  }
+
+  function syncPick(orig) {
+    const d = SRV;
+    if (!d || S.ansQ === d.qIdx || phaseOf(d, srvNow()) !== 'question') return;
+    const idx = d.qIdx;
+    setSession({ ansQ: idx, choice: orig });
+    markOptions(orig, null);
+    setFeedback('', 'Ответ принят ✓<small>ждём остальных…</small>');
+    setText($('ptsNow'), '✓');
+    sfx('tap'); vib(30);
+    sendSyncAnswer(idx, orig);
+  }
+
+  // Ответ уходит в фоне: игрок не ждёт очереди на сервере, а повтор не засчитается дважды
+  async function sendSyncAnswer(idx, orig) {
+    const body = { action: 'answer', testId: S.testId, gameId: S.gameId, player: getName(), pid: PID, qIdx: idx, choice: orig };
+    for (;;) {
+      let r = null;
+      try { r = await apiPostRetry(body, 3); } catch (e) { r = null; }
+      if (r && r.ok) return;
+      if (r && r.kicked) { handleKicked(); return; }
+      if (r && r.late) { toast('Не успели — ответ не засчитан', 'err'); return; }
+      if (r && (r.stale || r.closed)) return;
+      if (r && (r.conflict || r.notJoined)) { toast(r.error || 'Ответ не принят', 'err'); return; }
+      await sleep(1500);
+      if (S.screen !== 'game' || !SRV || SRV.qIdx !== idx) return;
     }
   }
 
   // ---------- результаты ----------
   function showResults() {
+    stopPoll();
+    stopTimer();
     setSession({ screen: 'results' });
     showScreen('screen-results');
     $('rejoinBtn').classList.add('hidden');
-    setHTML($('myScore'), myScoreHTML(S.total || questions.length));
+    setHTML($('myScore'), myScoreHTML(S.total || questions.length, null));
     setHTML($('leaderboard'), '<div class="wait"><span class="spinner dark"></span> Считаем очки…</div>');
-    startPoll(loadResults, 5000);
+    startPoll(loadResults, 4000);
   }
 
-  function myScoreHTML(total) {
-    const right = S.correct || 0;
-    return `Ваш результат: <b>${S.score || 0}</b>` + (total ? `<br>Правильных ответов: <b>${right}</b> из ${total}` : '');
+  function myScoreHTML(total, mine) {
+    const score = mine ? mine.score : (S.score || 0), right = mine ? (mine.correct || 0) : (S.correct || 0);
+    return `Ваш результат: <b>${score}</b>` + (total ? `<br>Правильных ответов: <b>${right}</b> из ${total}` : '');
   }
 
   async function loadResults() {
     let d;
     try { d = await apiGet({ action: 'getRoomStatus', testId: S.testId }); }
     catch (e) { setHTML($('leaderboard'), '<p class="empty">Ошибка загрузки результатов</p>'); return; }
-    if (d.total) setHTML($('myScore'), myScoreHTML(d.total));
+    noteTime(d);
+    if ((d.kicked || []).includes(MYID)) { handleKicked(); return; }
     if (d.exists && d.gameId !== S.gameId) { $('rejoinBtn').classList.remove('hidden'); return; }
-    // самовосстановление: если в таблице меньше, чем на телефоне — досылаем свой результат
-    const mine = (d.players || []).find(p => p.name === getName());
-    if (d.exists && (!mine || mine.answered < S.qIdx || mine.score !== S.score || !mine.finished)) {
-      queueScore();
-      // показываем свой настоящий результат, пока таблица догоняет
-      if (mine) { mine.score = S.score; mine.answered = S.qIdx; mine.finished = S.qIdx >= (d.total || S.qIdx); }
+    const players = d.players || [];
+    const mine = players.find(p => p.id === MYID);
+    if (mine) setSession({ score: mine.score, correct: mine.correct });
+    setHTML($('myScore'), myScoreHTML(d.total || S.total, mine));
+    setHTML($('leaderboard'), renderBoards(players, d.total, MYID, false, { sync: d.mode === 'sync' }) || '<p class="empty">Пока нет результатов</p>');
+    // праздник — когда все закончили (или ведущий завершил игру) и вы в тройке
+    const allDone = d.done || (players.length && players.every(p => p.finished));
+    if (allDone && S.celebrated !== d.gameId) {
+      setSession({ celebrated: d.gameId });
+      const rk = rankOf(players, MYID);
+      if (rk && rk.rank <= 3 && rk.me.score > 0) { confetti(); sfx('win'); vib([80, 60, 80]); }
     }
-    setHTML($('leaderboard'), renderBoard(d.players || [], d.total, getName()) || '<p class="empty">Пока нет результатов</p>');
   }
 
   function rejoinNewGame() {
     stopPoll();
     showScreen('screen-lobby');
     enterRoom(S.testId);
-  }
-
-  function renderBoard(players, total, me) {
-    return players
-      .slice()
-      .sort((a, b) => (b.score - a.score) || (b.answered - a.answered))
-      .map((p, idx) => {
-        const pct = total ? Math.round(p.answered / total * 100) : 0;
-        const status = p.finished ? '✓ закончил(а)' : `ответил(а) ${p.answered} из ${total || '?'}`;
-        return `
-          <div class="leaderboard-item ${p.name === me ? 'me' : ''} ${idx === 0 && p.score > 0 ? 'gold' : ''}">
-            <span class="place">${MEDALS[idx] || idx + 1}</span>
-            ${avatar(p.name)}
-            <span class="name">${esc(p.name)}${p.name === me ? ' (вы)' : ''}
-              <small>${status}</small>
-              ${p.finished ? '' : `<div class="mini-bar"><div style="width:${pct}%"></div></div>`}
-            </span>
-            <b>${p.score} б.</b>
-          </div>`;
-      }).join('');
   }
 </script>
 </body>
