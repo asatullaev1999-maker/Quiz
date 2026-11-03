@@ -201,7 +201,11 @@
 
   /* QR-код */
   .qr-box { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 14px; background: var(--soft); border-radius: 18px; }
-  .qr-img { width: 116px; height: 116px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 8px; display: grid; place-items: center; }
+  .qr-img { width: 168px; height: 168px; flex-shrink: 0; background: #fff; border-radius: 14px; padding: 10px; display: grid; place-items: center; }
+  /* у ведущего QR крупный и по центру — чтобы его легко было навести с телефона с проектора или экрана */
+  #hostQrBox { flex-direction: column; text-align: center; }
+  #hostQrBox .qr-img { width: min(300px, 70vw); height: min(300px, 70vw); padding: 14px; }
+  @media (max-width: 480px) { #menuQr { width: 140px; height: 140px; } .qr-box:not(#hostQrBox) { gap: 12px; } }
   .qr-img img, .qr-img canvas { width: 100% !important; height: 100% !important; }
   .qr-text b { display: block; font-size: 16px; margin-bottom: 4px; }
   .qr-text a { color: var(--brand); font-size: 13px; word-break: break-all; }
@@ -346,8 +350,14 @@
         <label class="mode-opt"><input type="radio" name="gameMode" value="self" checked>
           <span><b>🏃 Каждый в своём темпе</b><small>Игроки сами идут по вопросам. Меньше нагрузка на связь, подходит для большого класса.</small></span></label>
         <label class="mode-opt"><input type="radio" name="gameMode" value="sync">
-          <span><b>🎬 Все вместе</b><small>Вопросы переключает ведущий, у всех одновременно — как в Kahoot. Вопросы видны и на экране ведущего.</small></span></label>
+          <span><b>🎬 Все вместе</b><small>Вопросы переключает ведущий, у всех одновременно. Вопросы видны и на экране ведущего.</small></span></label>
       </div>
+      <label class="check-line"><input type="checkbox" id="hostAuto"> Переключать вопросы автоматически (только «Все вместе»)</label>
+      <label class="check-line" style="margin-top:-4px">Пауза на показ ответа и топа:
+        <select id="hostAutoDelay" style="width:auto;margin:0 0 0 4px;padding:8px 10px">
+          <option value="3">3 сек</option><option value="5" selected>5 сек</option><option value="7">7 сек</option>
+          <option value="10">10 сек</option><option value="15">15 сек</option><option value="20">20 сек</option><option value="30">30 сек</option>
+        </select></label>
       <label class="check-line"><input type="checkbox" id="hostShuffle"> Перемешивать варианты ответов (у каждого игрока по-своему)</label>
       <button id="hostOpenBtn" class="btn btn-pink" onclick="hostOpenRoom()">Открыть комнату</button>
     </div>
@@ -519,6 +529,19 @@
   function stopPoll() {
     if (pollTimer) clearInterval(pollTimer); pollTimer = null;
     if (tickTimer) clearInterval(tickTimer); tickTimer = null;
+    if (fastTimer) clearInterval(fastTimer); fastTimer = null;
+  }
+  // Быстрый опрос (раз в ~1 с) только в короткие моменты, когда важно увидеть результат сразу:
+  // конец вопроса и показ ответа. В остальное время опрос обычный — так нагрузка на таблицу невелика.
+  let fastTimer = null;
+  function setFast(on, fn) {
+    if (!on) { if (fastTimer) clearInterval(fastTimer); fastTimer = null; return; }
+    if (fastTimer) return;
+    fastTimer = setInterval(async () => {
+      if (pollBusy) return;
+      pollBusy = true;
+      try { await fn(); } finally { pollBusy = false; }
+    }, 1000 + Math.floor(Math.random() * 300));
   }
   // Меняем содержимое только если оно действительно изменилось — без мигания
   function setHTML(el, html) {
@@ -539,6 +562,15 @@
     return false;
   }
   function setBtn(btn, busy, label) { delete btn.dataset.html; btn.disabled = busy; btn.innerHTML = busy ? `<span class="spinner"></span> ${label}` : label; }
+
+  // Заранее скачиваем картинку следующего вопроса, пока идёт текущий: потом она открывается из кэша браузера
+  const preloaded = new Map();
+  function preloadImage(url) {
+    if (!url || !/^https?:\/\//i.test(url) || preloaded.has(url)) return;
+    const img = new Image();
+    preloaded.set(url, img); // держим ссылку, чтобы браузер не выбросил загрузку
+    img.src = url;
+  }
 
   // ---------- часы сервера ----------
   // В режиме «все вместе» все ориентируются на время сервера, а не на свои часы
@@ -679,11 +711,11 @@
     el.dataset.done = '1';
     el.innerHTML = '';
     if (window.QRCode) {
-      new QRCode(el, { text: SITE_URL, width: 200, height: 200, colorDark: '#1f1640', colorLight: '#ffffff',
+      new QRCode(el, { text: SITE_URL, width: 400, height: 400, colorDark: '#1f1640', colorLight: '#ffffff',
                        correctLevel: QRCode.CorrectLevel.M });
     } else {
       // запасной вариант, если библиотека не загрузилась
-      el.innerHTML = `<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(SITE_URL)}">`;
+      el.innerHTML = `<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=0&data=${encodeURIComponent(SITE_URL)}">`;
     }
   }
   function initQr() {
@@ -1025,10 +1057,12 @@
     setSession({ screen: 'host', testId: null, pin: null, gameId: null });
     $('hostPick').classList.remove('hidden');
     $('hostRoom').classList.add('hidden');
-    const o = load(KEY.hostOpts, { mode: 'self', shuffle: false });
+    const o = load(KEY.hostOpts, { mode: 'self', shuffle: false, auto: false });
     const radio = document.querySelector(`input[name="gameMode"][value="${o.mode === 'sync' ? 'sync' : 'self'}"]`);
     if (radio) radio.checked = true;
     $('hostShuffle').checked = !!o.shuffle;
+    $('hostAuto').checked = !!o.auto;
+    $('hostAutoDelay').value = String(o.autoDelay || 5);
     showScreen('screen-host');
     await loadTestsInto($('hostTestSelect'), preselect);
     fillHostPin();
@@ -1045,14 +1079,16 @@
     if (!pin) { toast('Введите PIN ведущего', 'err'); $('hostPinInput').focus(); return; }
     const mode = document.querySelector('input[name="gameMode"]:checked').value;
     const shuffle = $('hostShuffle').checked;
+    const auto = mode === 'sync' && $('hostAuto').checked;
     const btn = $('hostOpenBtn');
     setBtn(btn, true, 'Открываем…');
     try {
       const r = await apiPostRetry({ action: 'openRoom', testId, pin, mode, shuffle });
       if (!r.ok) { toast(r.error || 'Не удалось открыть комнату', 'err'); return; }
       const pins = load(KEY.pins, {}); pins[testId] = pin; store(KEY.pins, pins);
-      store(KEY.hostOpts, { mode, shuffle });
-      setSession({ screen: 'host', testId, pin, gameId: r.gameId, code: r.code, mode: r.mode || mode, shuffle: !!r.shuffle });
+      const autoDelay = Number($('hostAutoDelay').value) || 5;
+      store(KEY.hostOpts, { mode, shuffle, auto: $('hostAuto').checked, autoDelay });
+      setSession({ screen: 'host', testId, pin, gameId: r.gameId, code: r.code, mode: r.mode || mode, shuffle: !!r.shuffle, auto, autoDelay, autoPaused: false });
       showHostRoom();
     } catch (e) {
       toast(await diagnose(e), 'err');
@@ -1079,6 +1115,7 @@
     noteTime(d);
     if (!d.exists) { $('hostStatus').textContent = 'Комната закрыта'; return; }
     SRV = d;
+    preloadImage(d.nextImage);
     if (d.gameId !== S.gameId || d.code !== S.code || d.mode !== S.mode) setSession({ gameId: d.gameId, code: d.code, mode: d.mode, shuffle: d.shuffle });
     setText($('hostRoomCode'), d.code || '······');
     setText($('hostRoomName'), 'Тест: ' + S.testId + (d.mode === 'sync' ? ' · 🎬 все вместе' : ' · 🏃 каждый в своём темпе'));
@@ -1148,7 +1185,9 @@
     const q = d.q, i = d.qIdx, ph = phaseOf(d, now), key = i + ':' + ph;
     if (HV.key !== key) {
       HV.key = key;
-      const head = `<div class="live-top"><span>Вопрос ${i + 1} из ${d.total}</span><span class="score-pill">👥 ${players.length}</span></div>
+      setFast(ph === 'counting' || ph === 'reveal' || (ph === 'question' && S.auto), hostPoll);
+      if (ph === 'reveal') HV.revealSeen = now; // отсчёт автоперехода идёт от момента, когда ответ показан
+      const head =`<div class="live-top"><span>Вопрос ${i + 1} из ${d.total}</span><span class="score-pill">👥 ${players.length}</span></div>
                     <div class="progress"><div style="width:${Math.round(i / d.total * 100)}%"></div></div>`;
       const img = q.imageUrl ? `<div class="live-img"><img src="${esc(q.imageUrl)}" alt=""></div>` : '';
       const qt = `<p class="q-text">${esc(q.question)}</p>`;
@@ -1167,9 +1206,12 @@
         const last = i + 1 >= d.total;
         html = head + qt + tilesHTML(q, d.reveal)
              + '<label class="field-label">🏆 Топ-5</label>' + renderBoard(players, d.total, null, 'score', { sync: true, limit: 5 })
+             + (S.auto ? '<p class="hint" id="hlAuto" style="margin:8px 0 0"></p>' : '')
              + (last
                  ? '<button class="btn btn-pink" onclick="hostCtl(\'finishGame\')">🏁 Показать итоги</button>'
-                 : '<button class="btn btn-green" onclick="hostCtl(\'nextQuestion\')">Следующий вопрос ▶</button>');
+                 : '<button class="btn btn-green" onclick="hostCtl(\'nextQuestion\')">Следующий вопрос ▶</button>')
+             + (S.auto ? '<div class="row"><button class="btn btn-ghost" id="hlAutoBtn" onclick="hostToggleAuto()"></button>'
+                         + '<button class="btn btn-ghost" onclick="hostAutoPlus()">⏱ +5 сек</button></div>' : '');
       }
       setHTML(box, html);
     }
@@ -1182,7 +1224,32 @@
       row.classList.toggle('warn', sec > 3 && left / (q.time * 1000) <= 0.4);
       const answered = players.filter(p => p.lastQ === i).length;
       setText($('hlAnswered'), `Ответили: ${answered} из ${players.length}`);
+      // автопереход: все ответили — не ждём конец таймера
+      if (S.auto && !S.autoPaused && players.length && answered >= players.length && HV.endFired !== i) {
+        HV.endFired = i;
+        hostCtl('endQuestion');
+      }
     }
+    if (ph === 'reveal' && S.auto) {
+      const last = i + 1 >= d.total;
+      const left = (HV.revealSeen || now) + (S.autoDelay || 5) * 1000 + ((HV.extra || {})[i] || 0) - now;
+      const btn = $('hlAutoBtn');
+      if (btn) setText(btn, S.autoPaused ? '▶ Включить автопереход' : '⏸ Остановить автопереход');
+      setText($('hlAuto'), S.autoPaused ? 'Автопереход остановлен' : `${last ? 'Итоги' : 'Следующий вопрос'} через ${Math.max(0, Math.ceil(left / 1000))}…`);
+      if (!S.autoPaused && left <= 0 && HV.nextFired !== i && !hostCtlBusy) {
+        HV.nextFired = i;
+        hostCtl(last ? 'finishGame' : 'nextQuestion');
+      }
+    }
+  }
+
+  function hostToggleAuto() { setSession({ autoPaused: !S.autoPaused }); hostRenderSync(); }
+  // «+5 сек» к паузе на текущем вопросе (если отсчёт уже сработал — не откатываем)
+  function hostAutoPlus() {
+    if (!SRV || HV.nextFired === SRV.qIdx) return;
+    HV.extra = HV.extra || {};
+    HV.extra[SRV.qIdx] = (HV.extra[SRV.qIdx] || 0) + 5000;
+    hostRenderSync();
   }
 
   let hostCtlBusy = false;
@@ -1463,6 +1530,7 @@
     $('feedback').textContent = '';
     $('gameImageArea').innerHTML = q.imageUrl ? `<img src="${esc(q.imageUrl)}" alt="">` : '';
     drawOptions(q, S.qIdx, answer);
+    if (questions[S.qIdx + 1]) preloadImage(questions[S.qIdx + 1].imageUrl);
     // если страницу обновили, пока ответ летел на сервер — досылаем его
     if (S.pending && S.pending.qIdx === S.qIdx) {
       answering = true;
@@ -1575,6 +1643,8 @@
     if (d.gameId !== S.gameId || !d.started) { stopPoll(); showScreen('screen-lobby'); enterRoom(S.testId); return; }
     if (d.shuffle !== S.shuffle) setSession({ shuffle: d.shuffle });
     SRV = d;
+    preloadImage(d.q && d.q.imageUrl);
+    preloadImage(d.nextImage);
     if (d.done) { stopPoll(); showResults(); return; }
     syncRender();
   }
@@ -1593,7 +1663,7 @@
       return;
     }
     const idx = d.qIdx, q = d.q, ph = phaseOf(d, now), key = idx + ':' + ph;
-    if (SV.key !== key) { SV.key = key; renderSyncPhase(d, q, idx, ph); }
+    if (SV.key !== key) { SV.key = key; setFast(ph === 'counting' || ph === 'reveal', syncPoll); renderSyncPhase(d, q, idx, ph); }
     if (ph === 'lead') setText($('bigCount'), Math.max(1, Math.ceil((d.qStartAt - now) / 1000)));
     else if (ph === 'question') {
       const limitMs = q.time * 1000, left = Math.max(0, d.qDeadline - now), sec = Math.ceil(left / 1000);
@@ -1725,4 +1795,3 @@
 </script>
 </body>
 </html>
-
