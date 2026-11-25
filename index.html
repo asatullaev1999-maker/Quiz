@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marmalade Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1e0b45; --card: #ffffff; --surface: #ffffff; --ink: #1f1640; --muted: #7a7096; --line: #ece8f5; --soft: #f6f3fc;
+    --me-bg: #efe6ff; --gold-bg: #fff6d6;
+    --brand: #7b2ff7; --brand-2: #f72fa0; --blue: #1368ce; --green: #22a35a; --red: #e21b3c;
+    --yellow: #e0a100; --teal: #0aa3a3; --violet: #864cbf; --radius: 22px;
+  }
+  /* тёмная тема: по умолчанию — как в системе, кнопка 🌙/☀️ переключает вручную */
+  :root[data-theme="dark"] {
+    --card: #2b1a55; --surface: #3a2870; --ink: #f1ecff; --muted: #b0a4d6; --line: #44337a; --soft: #35246a;
+    --me-bg: #4a2f92; --gold-bg: #54451d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --card: #2b1a55; --surface: #3a2870; --ink: #f1ecff; --muted: #b0a4d6; --line: #44337a; --soft: #35246a;
+      --me-bg: #4a2f92; --gold-bg: #54451d;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: 'Rubik', 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg);
+         padding: 24px 16px 40px; min-height: 100vh; position: relative; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1;
+    background: radial-gradient(circle at 0% 0%, rgba(247,47,160,.55), transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(47,184,247,.5), transparent 55%),
+                radial-gradient(circle at 70% 45%, rgba(255,204,0,.18), transparent 40%); }
+
+  .toolbar { position: fixed; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 90; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.18); color: #fff; font-size: 18px; }
+  .icon-btn:hover { background: rgba(255,255,255,.3); }
+
+  .logo { text-align: center; margin: 0 0 18px; }
+  .logo-mark { display: inline-flex; align-items: center; gap: 10px; font-weight: 900; font-size: 30px; color: #fff; letter-spacing: -0.5px; }
+  .logo-mark .drop { width: 40px; height: 40px; border-radius: 14px; background: linear-gradient(135deg, #ff5fa2, #ffb800);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.15), 0 6px 16px rgba(247,47,160,.5); display: grid; place-items: center; font-size: 22px; }
+  .logo-sub { color: rgba(255,255,255,.7); font-size: 14px; margin-top: 4px; }
+
+  .card { max-width: 580px; margin: 0 auto; background: var(--card); padding: 28px; border-radius: var(--radius);
+          box-shadow: 0 20px 60px rgba(10,0,40,.45); }
+  @media (max-width: 480px) { .card { padding: 20px 16px; } }
+
+  h2, h3 { margin: 0 0 14px; }
+  h2 { font-size: 24px; font-weight: 900; text-align: center; }
+  .hint { color: var(--muted); font-size: 14px; text-align: center; margin: -6px 0 18px; }
+  label.field-label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+                      letter-spacing: .5px; margin: 14px 0 6px; }
+  input[type="text"], input[type="password"], select { width: 100%; padding: 14px 16px; margin: 0 0 10px;
+    border: 2px solid var(--line); border-radius: 14px; background: var(--soft); font: inherit; font-size: 16px; color: var(--ink); transition: .15s; }
+  input:focus, select:focus { outline: none; border-color: var(--brand); background: var(--surface); box-shadow: 0 0 0 4px rgba(123,47,247,.12); }
+
+  button { font: inherit; cursor: pointer; border: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .btn { width: 100%; padding: 15px; margin: 6px 0; border-radius: 14px; font-size: 16px; font-weight: 700; color: #fff;
+         box-shadow: 0 4px 0 rgba(0,0,0,.18); transition: transform .08s, box-shadow .08s, filter .15s;
+         display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn:disabled { opacity: .55; cursor: default; transform: none; }
+  .btn-main  { background: linear-gradient(135deg, var(--brand), #5a2fd6); }
+  .btn-green { background: linear-gradient(135deg, #2ccf6f, var(--green)); }
+  .btn-pink  { background: linear-gradient(135deg, var(--brand-2), #d01f7c); }
+  .btn-ghost { background: var(--soft); color: var(--ink); box-shadow: none; border: 2px solid var(--line); }
+  .btn-ghost:active { transform: translateY(1px); box-shadow: none; }
+  .btn-sm { padding: 10px 12px; font-size: 14px; width: auto; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+
+  .hidden { display: none !important; }
+  .screen { animation: pop .25s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .menu-actions { display: grid; gap: 10px; margin-top: 8px; }
+  .menu-tile { display: flex; align-items: center; gap: 14px; text-align: left; padding: 18px; border-radius: 18px; color: #fff;
+               font-weight: 700; font-size: 17px; box-shadow: 0 5px 0 rgba(0,0,0,.18); transition: transform .08s, box-shadow .08s; }
+  .menu-tile:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .menu-tile .ico { width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,.22); display: grid;
+                    place-items: center; font-size: 24px; flex-shrink: 0; }
+  .menu-tile small { display: block; font-weight: 400; opacity: .85; font-size: 13px; margin-top: 2px; }
+
+  .panel { background: var(--soft); border-radius: 16px; padding: 14px; margin: 12px 0; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .panel-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .pages-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .page-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); color: var(--ink); border: 2px solid var(--line); font-weight: 700; }
+  .page-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); box-shadow: 0 4px 12px rgba(123,47,247,.35); }
+  .page-btn.add { border-style: dashed; color: var(--brand); }
+  .q-head { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+  .q-head h3 { margin: 0; color: var(--brand); font-size: 20px; }
+  :root[data-theme="dark"] .q-head h3, :root[data-theme="dark"] .score-pill { color: #c9a8ff; }
+  .link-danger { background: none; color: var(--red); font-size: 14px; font-weight: 500; padding: 4px; }
+  .link-muted { background: none; color: var(--muted); font-size: 14px; font-weight: 500; padding: 4px; text-decoration: underline; }
+
+  .image-status { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  .image-status.err { color: var(--red); }
+  .image-preview { margin-top: 10px; text-align: center; }
+  .image-preview img { max-width: 100%; max-height: 180px; border-radius: 12px; display: block; margin: 0 auto 6px; background: var(--line); }
+
+  .option-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+  .option-row .chip { width: 34px; height: 34px; border-radius: 10px; color: #fff; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; }
+  .option-row input[type="text"] { margin: 0; flex: 1; }
+  .correct-toggle { position: relative; flex-shrink: 0; }
+  .correct-toggle input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+  .correct-toggle span { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center;
+                         color: transparent; font-weight: 900; transition: .15s; background: var(--surface); }
+  .correct-toggle input:checked + span { background: var(--green); border-color: var(--green); color: #fff; }
+
+  .c-0 { background: var(--red); } .c-1 { background: var(--blue); } .c-2 { background: var(--yellow); }
+  .c-3 { background: var(--green); } .c-4 { background: var(--teal); } .c-5 { background: var(--violet); }
+
+  .mode-pick { display: grid; gap: 8px; margin: 6px 0 10px; }
+  .mode-opt { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 2px solid var(--line); border-radius: 14px;
+              background: var(--soft); cursor: pointer; }
+  .mode-opt input { margin-top: 5px; accent-color: var(--brand); }
+  .mode-opt:has(input:checked) { border-color: var(--brand); background: var(--surface); }
+  .mode-opt b { display: block; }
+  .mode-opt small { display: block; color: var(--muted); font-weight: 400; font-size: 13px; margin-top: 2px; }
+  .check-line { display: flex; gap: 8px; align-items: center; font-size: 14px; margin: 6px 0 12px; cursor: pointer; }
+  .check-line input { accent-color: var(--brand); width: 18px; height: 18px; margin: 0; }
+
+  .room-code { text-align: center; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff;
+               border-radius: 16px; padding: 14px; margin: 14px 0; }
+  .room-code small { opacity: .8; font-size: 13px; }
+  .room-code div { font-size: 24px; font-weight: 900; word-break: break-word; }
+  .room-code .big-code { font-size: 52px; letter-spacing: 10px; line-height: 1.1; margin: 4px 0 2px; }
+  @media (max-width: 480px) { .room-code .big-code { font-size: 40px; letter-spacing: 6px; } }
+  .code-input { text-align: center; font-size: 34px !important; font-weight: 900; letter-spacing: 10px; padding: 16px !important; }
+  .status-badge { display: inline-block; margin-top: 8px; background: rgba(255,255,255,.22); padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+  .players { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; }
+  .player-tag { display: inline-flex; align-items: center; gap: 8px; background: var(--soft); padding: 6px 14px 6px 6px;
+                border-radius: 999px; font-weight: 500; }
+  .player-tag .kick { margin-right: -6px; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .kick { background: none; color: var(--muted); padding: 2px 6px; font-size: 15px; border-radius: 8px; flex-shrink: 0; }
+  .kick:hover { color: var(--red); background: rgba(226,27,60,.1); }
+  .wait { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); margin: 18px 0 6px; text-align: center; }
+  .dots span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); margin: 0 2px; animation: bounce 1s infinite; }
+  .dots span:nth-child(2) { animation-delay: .15s; } .dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity: .4; } 40% { transform: translateY(-6px); opacity: 1; } }
+  .empty { color: var(--muted); font-size: 14px; padding: 10px 0; }
+
+  .game-top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--muted); font-size: 14px; }
+  .score-pill { background: var(--soft); padding: 6px 12px; border-radius: 999px; color: var(--brand); }
+  .progress { height: 10px; background: var(--line); border-radius: 999px; overflow: hidden; margin: 10px 0 18px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .4s; }
+  #gameImageArea img { max-width: 100%; max-height: 220px; border-radius: 16px; display: block; margin: 0 auto 14px; }
+  .q-text { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 18px; line-height: 1.3; }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) { .options-grid { grid-template-columns: 1fr; } }
+  .option-btn { display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 14px; border-radius: 16px; color: #fff;
+                font-size: 17px; font-weight: 700; text-align: left; box-shadow: 0 5px 0 rgba(0,0,0,.2);
+                transition: transform .08s, box-shadow .08s, opacity .2s, filter .15s; }
+  .option-btn:hover { filter: brightness(1.08); }
+  .option-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .option-btn:disabled { cursor: default; transform: none; filter: none; }
+  .option-btn .shape { font-size: 22px; opacity: .9; flex-shrink: 0; }
+  .option-btn.dim { opacity: .3; }
+  .option-btn.picked { outline: 4px solid #fff; box-shadow: 0 0 0 7px var(--brand); }
+  .option-btn.right { outline: 4px solid #fff; box-shadow: 0 0 0 7px var(--green); }
+  .option-btn.wrong { outline: 4px solid #fff; box-shadow: 0 0 0 7px #222; }
+  .feedback { text-align: center; font-weight: 900; font-size: 20px; margin-top: 16px; min-height: 28px; }
+  .feedback.ok { color: var(--green); } .feedback.bad { color: var(--red); }
+  .feedback small { display: block; font-size: 15px; font-weight: 500; color: var(--muted); margin-top: 4px; }
+  .feedback small.rank { color: var(--brand); font-weight: 700; }
+  :root[data-theme="dark"] .feedback small.rank, :root[data-theme="dark"] .my-score b { color: #c9a8ff; }
+
+  .big-count { font-size: 84px; font-weight: 900; text-align: center; color: var(--brand); line-height: 1; margin: 14px 0 8px; }
+  .live-top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--muted); font-size: 14px; }
+  .live-img img { max-width: 100%; max-height: 240px; border-radius: 16px; display: block; margin: 0 auto 14px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 14px; }
+  @media (max-width: 480px) { .tiles { grid-template-columns: 1fr; } }
+  .opt-tile { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 12px; border-radius: 14px; color: #fff;
+              font-weight: 700; font-size: 17px; transition: opacity .2s; }
+  .opt-tile .shape { font-size: 20px; opacity: .9; flex-shrink: 0; }
+  .opt-tile .t { flex: 1; min-width: 0; word-break: break-word; }
+  .opt-tile .cnt { background: rgba(0,0,0,.28); border-radius: 999px; padding: 2px 11px; font-size: 15px; }
+  .opt-tile.dim { opacity: .3; }
+  .opt-tile.right { outline: 4px solid #fff; box-shadow: 0 0 0 7px var(--green); }
+
+  /* таймер */
+  .timer-row { display: flex; align-items: center; gap: 12px; margin: -6px 0 16px; }
+  .timer-num { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+               font-size: 22px; font-weight: 900; color: #fff; background: var(--brand); transition: background .3s; }
+  .timer-track { flex: 1; height: 14px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .timer-track > div { height: 100%; width: 100%; background: linear-gradient(90deg, #2ccf6f, var(--green)); border-radius: 999px; }
+  .timer-row.warn .timer-num { background: var(--yellow); }
+  .timer-row.warn .timer-track > div { background: var(--yellow); }
+  .timer-row.danger .timer-num { background: var(--red); animation: pulse .5s infinite alternate; }
+  .timer-row.danger .timer-track > div { background: var(--red); }
+  @keyframes pulse { to { transform: scale(1.08); } }
+  .pts-badge { color: var(--brand); font-weight: 700; font-size: 14px; min-width: 64px; text-align: right; }
+  :root[data-theme="dark"] .pts-badge { color: #c9a8ff; }
+  .time-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .time-row select { width: auto; flex: 1; min-width: 140px; margin: 0; }
+
+  /* QR-код */
+  .qr-box { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 14px; background: var(--soft); border-radius: 18px; }
+  .qr-img { width: 116px; height: 116px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 8px; display: grid; place-items: center; }
+  .qr-img img, .qr-img canvas { width: 100% !important; height: 100% !important; }
+  .qr-text b { display: block; font-size: 16px; margin-bottom: 4px; }
+  .qr-text a { color: var(--brand); font-size: 13px; word-break: break-all; }
+  :root[data-theme="dark"] .qr-text a { color: #c9a8ff; }
+  .qr-text p { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
+
+  .trophy { font-size: 64px; text-align: center; line-height: 1; margin-bottom: 6px; }
+  .my-score { text-align: center; font-size: 16px; color: var(--muted); margin-bottom: 16px; }
+  .my-score b { color: var(--brand); font-size: 22px; }
+  .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; margin-bottom: 8px;
+                      background: var(--soft); font-size: 17px; }
+  .leaderboard-item .place { width: 30px; text-align: center; font-weight: 900; font-size: 20px; flex-shrink: 0; }
+  .leaderboard-item .name { flex: 1; font-weight: 500; min-width: 0; }
+  .leaderboard-item .name small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 3px; }
+  .leaderboard-item.me { background: var(--me-bg); outline: 2px solid var(--brand); }
+  .leaderboard-item.gold { background: var(--gold-bg); }
+  .mini-bar { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 5px; }
+  .mini-bar > div { height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .4s; }
+
+  .toast-wrap { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; width: min(92vw, 420px); }
+  .toast { background: #1f1640; color: #fff; padding: 14px 18px; border-radius: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.35); animation: pop .2s; }
+  .toast.err { background: var(--red); } .toast.ok { background: var(--green); }
+  .spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  .spinner.dark { border-color: var(--line); border-top-color: var(--brand); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .confetti span { position: fixed; top: -20px; width: 10px; height: 14px; z-index: 200; pointer-events: none;
+                   animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
+  @media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
+  .file-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 6px; }
+  .file-row .btn { flex: 1; min-width: 150px; }
+  .host-tools { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: -4px 0 6px; }
+  .fatal { text-align: center; }
+  .fatal p { color: var(--muted); font-size: 15px; line-height: 1.45; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+<div class="toolbar">
+  <button class="icon-btn" id="soundBtn" onclick="toggleSound()" title="Звук и вибрация">🔊</button>
+  <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Тёмная / светлая тема">🌙</button>
+</div>
+
+<div class="logo">
+  <div class="logo-mark"><span class="drop">🍬</span>Marmalade Quiz</div>
+  <div class="logo-sub">Создавай викторины и играй с друзьями</div>
+</div>
+
+<div class="card">
+  <!-- ЗАГРУЗКА -->
+  <div id="screen-loading" class="screen">
+    <div class="wait"><span class="spinner dark"></span> Подключаемся…</div>
+  </div>
+
+  <!-- ОШИБКА ПОДКЛЮЧЕНИЯ -->
+  <div id="screen-fatal" class="screen hidden fatal">
+    <div class="trophy">⚠️</div>
+    <h2>Нет подключения к базе</h2>
+    <p id="fatalText"></p>
+    <button class="btn btn-main" onclick="location.reload()">🔄 Попробовать снова</button>
+  </div>
+
+  <!-- ГЛАВНОЕ МЕНЮ -->
+  <div id="screen-menu" class="screen hidden">
+    <h2>Привет! 👋</h2>
+    <p class="hint">Как тебя зовут?</p>
+    <input type="text" id="playerName" placeholder="Введите ваше имя..." oninput="saveNameToStorage()" maxlength="24">
+    <div class="menu-actions">
+      <button class="menu-tile btn-green" onclick="openLobby()">
+        <span class="ico">🎮</span><span>Присоединиться к игре<small>Введи код комнаты и играй</small></span>
+      </button>
+      <button class="menu-tile btn-pink" onclick="openHostScreen()">
+        <span class="ico">👑</span><span>Провести игру<small>Для создателя теста: запуск и топ игроков</small></span>
+      </button>
+      <button class="menu-tile btn-main" onclick="openCreator()">
+        <span class="ico">✏️</span><span>Создать свой тест<small>Вопросы, картинки, варианты ответов</small></span>
+      </button>
+    </div>
+    <div class="qr-box">
+      <div class="qr-img" id="menuQr"></div>
+      <div class="qr-text">
+        <b>📱 Открой на телефоне</b>
+        <p>Наведи камеру на QR-код, чтобы зайти в игру</p>
+        <a id="siteLink" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- СОЗДАНИЕ ТЕСТА -->
+  <div id="screen-creator" class="screen hidden">
+    <h2>Создатель теста</h2>
+    <div class="file-row">
+      <button class="btn btn-ghost btn-sm" onclick="$('fileInput').click()">📂 Загрузить из файла</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadDraft()">💾 Скачать файл</button>
+      <input type="file" id="fileInput" accept=".txt,.csv,.md,text/plain,text/csv" class="hidden" onchange="onFilePicked(this)">
+    </div>
+    <label class="field-label" for="testIdInput">Название теста</label>
+    <input type="text" id="testIdInput" placeholder="Например: География 5А" oninput="saveDraft()" maxlength="60">
+    <label class="field-label" for="testPinInput">PIN ведущего</label>
+    <input type="password" id="testPinInput" placeholder="Минимум 4 символа — нужен, чтобы запускать игру" oninput="saveDraft()" autocomplete="off">
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Вопросы теста</span>
+        <button class="link-muted" onclick="resetDraft()">🧹 начать заново</button>
+      </div>
+      <div id="pagesContainer" class="pages-bar"></div>
+    </div>
+
+    <div class="q-head">
+      <h3 id="currentQuestionTitleLabel">Вопрос 1</h3>
+      <button class="link-danger" id="deleteQuestionBtn" onclick="removeQuestionPage()">🗑 Удалить вопрос</button>
+    </div>
+    <label class="field-label" for="qTitle">Текст вопроса</label>
+    <input type="text" id="qTitle" placeholder="О чём спросим?" oninput="saveCurrentPageData()">
+
+    <div class="panel">
+      <span class="panel-title">⏱ Время на ответ</span>
+      <div class="time-row">
+        <select id="qTime" onchange="saveCurrentPageData()"></select>
+        <button class="link-muted" onclick="applyTimeToAll()">применить ко всем вопросам</button>
+      </div>
+      <div class="image-status">Быстрый верный ответ — до 100 баллов, медленнее — меньше. Не успел — 0.</div>
+    </div>
+
+    <div class="panel">
+      <span class="panel-title">📷 Картинка к вопросу (необязательно)</span>
+      <input type="text" id="selectedImageUrl" placeholder="Вставьте ссылку на картинку: https://..." style="margin:8px 0 0;"
+             oninput="onImageUrlInput()" autocomplete="off">
+      <div id="imageStatus" class="image-status hidden"></div>
+      <div id="imagePreview" class="image-preview hidden">
+        <img id="imagePreviewImg" alt="">
+        <button class="link-danger" onclick="clearImage()">✕ убрать картинку</button>
+      </div>
+    </div>
+
+    <label class="field-label">Варианты ответов · ✓ отметьте правильный</label>
+    <div id="optionsContainer"></div>
+    <div class="row">
+      <button class="btn btn-ghost btn-sm" onclick="addOptionField()">＋ Вариант</button>
+      <button class="btn btn-ghost btn-sm" onclick="removeOptionField()">－ Вариант</button>
+    </div>
+
+    <button id="saveTestBtn" class="btn btn-green" onclick="finishAndSaveAllQuestions()" style="margin-top:18px;">🚀 Сохранить тест</button>
+    <button class="btn btn-ghost" onclick="goToMenu()">← Назад в меню</button>
+  </div>
+
+  <!-- ЭКРАН ВЕДУЩЕГО -->
+  <div id="screen-host" class="screen hidden">
+    <h2>👑 Ведущий</h2>
+    <div id="hostPick">
+      <p class="hint">Только создатель теста может открыть комнату и начать игру</p>
+      <label class="field-label" for="hostTestSelect">Ваш тест</label>
+      <select id="hostTestSelect" onchange="fillHostPin()"><option value="">Загрузка тестов...</option></select>
+      <label class="field-label" for="hostPinInput">PIN ведущего</label>
+      <input type="password" id="hostPinInput" placeholder="PIN, который вы задали при создании" autocomplete="off"
+             onkeydown="if(event.key==='Enter') hostOpenRoom()">
+      <div class="host-tools">
+        <button class="link-muted" onclick="hostEditTest()">✏️ изменить тест</button>
+        <button class="link-muted" onclick="hostDownloadTest()">💾 скачать файл теста</button>
+      </div>
+      <label class="field-label">Режим игры</label>
+      <div class="mode-pick">
+        <label class="mode-opt"><input type="radio" name="gameMode" value="self" checked>
+          <span><b>🏃 Каждый в своём темпе</b><small>Игроки сами идут по вопросам, каждый со своей скоростью.</small></span></label>
+        <label class="mode-opt"><input type="radio" name="gameMode" value="sync">
+          <span><b>🎬 Все вместе</b><small>Вопросы переключает ведущий, у всех одновременно. Вопросы видны и на экране ведущего.</small></span></label>
+      </div>
+      <label class="check-line"><input type="checkbox" id="hostAuto"> Переключать вопросы автоматически (только «Все вместе»)</label>
+      <label class="check-line"><input type="checkbox" id="hostShuffle"> Перемешивать варианты ответов (у каждого игрока по-своему)</label>
+      <button id="hostOpenBtn" class="btn btn-pink" onclick="hostOpenRoom()">Открыть комнату</button>
+    </div>
+
+    <div id="hostRoom" class="hidden">
+      <div class="room-code">
+        <small>Код для входа</small>
+        <div id="hostRoomCode" class="big-code">······</div>
+        <small id="hostRoomName"></small><br>
+        <span class="status-badge" id="hostStatus">Набор игроков</span>
+      </div>
+      <div class="qr-box" id="hostQrBox">
+        <div class="qr-img" id="hostQr"></div>
+        <div class="qr-text">
+          <b>Сайт игры</b>
+          <p>Игроки сканируют QR-код и вводят код комнаты</p>
+          <a class="site-link-copy" target="_blank" rel="noopener"></a>
+        </div>
+      </div>
+      <p class="hint" id="hostKeepOpen" style="margin:12px 0 0">💡 Не закрывайте эту страницу до конца игры — она ведёт игру.</p>
+      <label class="field-label" id="hostListLabel">Игроки · 0</label>
+      <div id="hostList"></div>
+      <div id="hostLive" class="hidden"></div>
+      <button id="hostStartBtn" class="btn btn-green" onclick="hostStart()" disabled>Ждём игроков…</button>
+      <button id="hostFinishBtn" class="btn btn-pink hidden" onclick="hostFinish()">🏁 Завершить игру и показать итоги</button>
+      <button id="hostNewGameBtn" class="btn btn-main hidden" onclick="hostNewGame()">🔁 Новая игра (сбросить очки)</button>
+    </div>
+    <button class="btn btn-ghost" onclick="goToMenu()">← Назад в меню</button>
+  </div>
+
+  <!-- КОМНАТА ОЖИДАНИЯ (игрок) -->
+  <div id="screen-lobby" class="screen hidden">
+    <h2>Комната ожидания</h2>
+    <div id="pickArea">
+      <p class="hint">Введите код комнаты — его покажет ведущий</p>
+      <input type="text" id="roomCodeInput" class="code-input" placeholder="000000" maxlength="6"
+             inputmode="numeric" autocomplete="off"
+             oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter') joinRoom()">
+      <button id="joinBtn" class="btn btn-main" onclick="joinRoom()">Войти в игру</button>
+    </div>
+
+    <div id="roomArea" class="hidden">
+      <div class="room-code"><small>Вы в комнате</small><div id="roomName"></div><small id="modeInfo"></small></div>
+      <label class="field-label">Игроки · <span id="playersCount">0</span></label>
+      <div id="playersList" class="players"></div>
+      <div class="wait" id="waitText"><span class="dots"><span></span><span></span><span></span></span> <span id="waitLabel">Ожидаем, когда ведущий начнёт игру…</span></div>
+    </div>
+    <button class="btn btn-ghost" onclick="goToMenu()">← Назад в меню</button>
+  </div>
+
+  <!-- ЭКРАН ИГРЫ -->
+  <div id="screen-game" class="screen hidden">
+    <div class="game-top">
+      <span id="qNum">Вопрос</span>
+      <span class="score-pill">⭐ <span id="liveScore">0</span></span>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="timer-row" id="timerRow">
+      <div class="timer-num" id="timerNum">20</div>
+      <div class="timer-track"><div id="timerBar"></div></div>
+      <div class="pts-badge" id="ptsNow">100 б.</div>
+    </div>
+    <div id="gameImageArea"></div>
+    <p id="qTextDisplay" class="q-text"></p>
+    <div id="syncInfo"></div>
+    <div id="optionsArea" class="options-grid"></div>
+    <div id="feedback" class="feedback"></div>
+    <div id="syncBoard"></div>
+    <button class="btn btn-ghost" style="margin-top:16px;" onclick="goToMenu()">← Выйти в меню</button>
+  </div>
+
+  <!-- РЕЗУЛЬТАТЫ (игрок) -->
+  <div id="screen-results" class="screen hidden">
+    <div class="trophy">🏆</div>
+    <h2>Результаты викторины</h2>
+    <div id="myScore" class="my-score"></div>
+    <div id="resultsWait"></div>
+    <div id="leaderboard"></div>
+    <button class="btn btn-main" onclick="goToMenu()">← В главное меню</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // ==================== НАСТРОЙКИ ====================
+  const SITE_URL = 'https://asatullaev1999-maker.github.io/Quiz/';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD1eo-JWVFryht9Os8hicYAzgkpo4KvLzo",
+    authDomain: "marmalade-quiz.firebaseapp.com",
+    databaseURL: "https://marmalade-quiz-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "marmalade-quiz",
+    storageBucket: "marmalade-quiz.firebasestorage.app",
+    messagingSenderId: "320371774659",
+    appId: "1:320371774659:web:d29e37e64c997ae1f27e76"
+  };
+
+  const MAX_POINTS = 100;     // за мгновенный верный ответ
+  const MIN_POINTS = 10;      // за верный ответ в последнюю секунду
+  const DEFAULT_TIME = 20;    // секунд, если у вопроса время не задано
+  const TIME_CHOICES = [5, 10, 15, 20, 30, 45, 60, 90, 120];
+  const LEAD_MS = 3000;       // «Все вместе»: сколько игроки читают вопрос до появления вариантов
+  const GRACE_MS = 2500;      // запас на задержку связи после конца времени
+  const AUTO_NEXT_MS = 7000;  // автопереход: сколько показывать ответ и топ
+
+  const SHAPES = ['▲', '◆', '●', '■', '★', '♥'];
+  const AVATAR_COLORS = ['#e21b3c', '#1368ce', '#e0a100', '#22a35a', '#0aa3a3', '#864cbf', '#f72fa0'];
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  const KEY = { name: 'marmalade_player_name', session: 'marmalade_fb_session', draft: 'marmalade_draft', pins: 'marmalade_fb_pins',
+                theme: 'marmalade_theme', sound: 'marmalade_sound', hostOpts: 'marmalade_hostopts' };
+
+  // ==================== FIREBASE ====================
+  let db = null, auth = null, TS = null, UID = null, srvOffset = 0;
+  const srvNow = () => Date.now() + srvOffset;
+  function initFirebase() {
+    if (!window.firebase) throw new Error('NO_SDK');
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    auth = firebase.auth();
+    TS = firebase.database.ServerValue.TIMESTAMP;
+    db.ref('.info/serverTimeOffset').on('value', s => { srvOffset = s.val() || 0; });
+  }
+  // анонимный вход: у каждого браузера свой постоянный id — по нему игрок возвращается в игру
+  function ensureAuth() {
+    return new Promise((resolve, reject) => {
+      const off = auth.onAuthStateChanged(u => {
+        if (u) { off(); UID = u.uid; resolve(u.uid); }
+        else auth.signInAnonymously().catch(e => { off(); reject(e); });
+      });
+    });
+  }
+
+  // подписки текущего экрана — снимаем все при смене экрана
+  let subs = [];
+  function listen(ref, cb, event = 'value') {
+    const fn = ref.on(event, cb, err => console.warn('listen', ref.toString(), err));
+    subs.push(() => ref.off(event, fn));
+  }
+  function unsubAll() { subs.forEach(f => { try { f(); } catch (e) {} }); subs = []; }
+
+  async function sha256hex(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  const randId = (n = 20) => Array.from(crypto.getRandomValues(new Uint8Array(n))).map(b => (b % 36).toString(36)).join('');
+  const toArr = v => Array.isArray(v) ? v : (v ? Object.keys(v).sort((a, b) => a - b).map(k => v[k]) : []);
+
+  // ==================== СОСТОЯНИЕ ====================
+  let S = { screen: 'menu' };   // сессия этого браузера (переживает обновление страницы)
+  let pages = [], activePageIndex = 0;
+  let HT = null;   // тест ведущего (с правильными ответами) — только в памяти компьютера ведущего
+  let H = null;    // комната глазами ведущего
+  let P = null;    // комната глазами игрока
+  let tickTimer = null, timerId = null, lastTickSec = null, curScreen = 'screen-loading';
+  let HV = { key: '' }, SV = { key: '' }, SELF = { shown: null, until: 0 };
+
+  // ==================== УТИЛИТЫ ====================
+  const $ = id => document.getElementById(id);
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+  function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+  function forget(key) { try { localStorage.removeItem(key); } catch (e) {} }
+  function setSession(patch) { S = Object.assign({}, S, patch); store(KEY.session, S); }
+
+  function toast(msg, type = '') {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    $('toasts').appendChild(el);
+    setTimeout(() => el.remove(), Math.max(3500, msg.length * 60));
+  }
+  function showScreen(id) {
+    document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
+    $(id).classList.remove('hidden');
+    curScreen = id;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function showOnce(id) { if (curScreen !== id) showScreen(id); }
+  function startTick(fn, ms) { stopTick(); tickTimer = setInterval(fn, ms); }
+  function stopTick() { if (tickTimer) clearInterval(tickTimer); tickTimer = null; }
+  function setHTML(el, html) { if (!el || el.dataset.html === html) return; el.dataset.html = html; el.innerHTML = html; }
+  function setText(el, text) { if (el && el.textContent !== String(text)) el.textContent = text; }
+  function avatarColor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AVATAR_COLORS[h % AVATAR_COLORS.length]; }
+  function avatar(name) { return `<span class="avatar" style="background:${avatarColor(name)}">${esc(String(name || '?').trim().charAt(0).toUpperCase())}</span>`; }
+  function getName() { return $('playerName').value.trim(); }
+  function requireName() {
+    if (getName()) return true;
+    showScreen('screen-menu');
+    toast('Сначала введите ваше имя 🙂', 'err');
+    $('playerName').focus();
+    return false;
+  }
+  function setBtn(btn, busy, label) { delete btn.dataset.html; btn.disabled = busy; btn.innerHTML = busy ? `<span class="spinner"></span> ${label}` : label; }
+  function fbError(e) {
+    const c = (e && (e.code || e.message)) || '';
+    if (/PERMISSION_DENIED|permission/i.test(c)) return 'Нет доступа к базе — проверьте правила (Rules) в Firebase.';
+    return 'Ошибка связи с базой. Проверьте интернет и попробуйте ещё раз.';
+  }
+  function qTimeOf(q) { const t = Number(q && q.time); return t > 0 ? t : DEFAULT_TIME; }
+  function pointsFor(elapsedMs, limitSec) {
+    const frac = Math.min(1, Math.max(0, elapsedMs / (limitSec * 1000)));
+    return Math.round(MAX_POINTS - (MAX_POINTS - MIN_POINTS) * frac);
+  }
+
+  // ==================== ТЕМА, ЗВУК, ВИБРАЦИЯ ====================
+  function systemDark() { return !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); }
+  function isDark() { const t = load(KEY.theme, null); return t ? t === 'dark' : systemDark(); }
+  function applyTheme() {
+    const t = load(KEY.theme, null);
+    if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    $('themeBtn').textContent = isDark() ? '☀️' : '🌙';
+  }
+  function toggleTheme() { store(KEY.theme, isDark() ? 'light' : 'dark'); applyTheme(); }
+
+  let soundOn = load(KEY.sound, true) !== false;
+  function updateSoundBtn() { $('soundBtn').textContent = soundOn ? '🔊' : '🔇'; }
+  function toggleSound() { soundOn = !soundOn; store(KEY.sound, soundOn); updateSoundBtn(); if (soundOn) sfx('tap'); }
+
+  let AC = null;
+  function tone(freq, dur, type = 'sine', vol = 0.15, delay = 0) {
+    if (!soundOn) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+      const o = AC.createOscillator(), g = AC.createGain();
+      const t = AC.currentTime + delay;
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(AC.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+  const SFX = {
+    tap()   { tone(520, 0.07, 'sine', 0.12); },
+    tick()  { tone(980, 0.05, 'square', 0.04); },
+    start() { tone(440, 0.1, 'triangle', 0.12); tone(660, 0.14, 'triangle', 0.12, 0.1); },
+    right() { tone(660, 0.12, 'sine', 0.16); tone(880, 0.22, 'sine', 0.16, 0.12); },
+    wrong() { tone(200, 0.32, 'sawtooth', 0.09); },
+    win()   { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.28, 'triangle', 0.15, i * 0.15)); }
+  };
+  function sfx(name) { try { SFX[name] && SFX[name](); } catch (e) {} }
+  function vib(pattern) { if (soundOn && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} } }
+  function confetti() {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'confetti';
+    const colors = ['#f72fa0', '#ffb800', '#22a35a', '#1368ce', '#7b2ff7', '#e21b3c'];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('span');
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.background = colors[i % colors.length];
+      p.style.animationDuration = (2.5 + Math.random() * 2.5) + 's';
+      p.style.animationDelay = Math.random() * 0.8 + 's';
+      p.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+      wrap.appendChild(p);
+    }
+    document.body.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 6500);
+  }
+
+  // ==================== QR ====================
+  function drawQr(el) {
+    if (!el || el.dataset.done) return;
+    el.dataset.done = '1';
+    el.innerHTML = '';
+    if (window.QRCode) {
+      new QRCode(el, { text: SITE_URL, width: 200, height: 200, colorDark: '#1f1640', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    } else {
+      el.innerHTML = `<img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(SITE_URL)}">`;
+    }
+  }
+  function initQr() {
+    const short = SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    document.querySelectorAll('#siteLink, .site-link-copy').forEach(a => { a.href = SITE_URL; a.textContent = short; });
+    drawQr($('menuQr'));
+    drawQr($('hostQr'));
+  }
+
+  // ==================== СТАРТ ====================
+  window.onload = async function () {
+    applyTheme();
+    updateSoundBtn();
+    initQr();
+    try { $('playerName').value = localStorage.getItem(KEY.name) || ''; } catch (e) {}
+    S = load(KEY.session, { screen: 'menu' });
+    try {
+      initFirebase();
+      await ensureAuth();
+    } catch (e) {
+      console.error(e);
+      const c = (e && (e.code || e.message)) || '';
+      $('fatalText').textContent = /operation-not-allowed|admin-restricted/i.test(c)
+        ? 'В Firebase не включён анонимный вход. Откройте console.firebase.google.com → проект → Authentication → Sign-in method → Anonymous → Enable.'
+        : c === 'NO_SDK' ? 'Не загрузились файлы Firebase. Проверьте интернет и обновите страницу.'
+        : 'Не удалось подключиться к Firebase. Проверьте интернет и обновите страницу. (' + c + ')';
+      showScreen('screen-fatal');
+      return;
+    }
+    if (!getName() && ['lobby', 'game', 'results', 'host'].includes(S.screen)) S = { screen: 'menu' };
+    try {
+      if (S.screen === 'creator') openCreator();
+      else if (S.screen === 'host' && S.code && S.k && S.sid) await resumeHost();
+      else if (['lobby', 'game', 'results'].includes(S.screen) && S.code) playerConnect(S.code);
+      else if (S.screen === 'host') openHostScreen();
+      else goToMenu();
+    } catch (e) { console.error(e); goToMenu(); }
+  };
+
+  function saveNameToStorage() { try { localStorage.setItem(KEY.name, getName()); } catch (e) {} }
+
+  function leaveRoom() {
+    unsubAll(); stopTick(); stopTimer();
+    if (P && UID) {
+      const r = db.ref(`rooms/${P.code}/online/${UID}`);
+      r.onDisconnect().cancel().catch(() => {});
+      r.remove().catch(() => {});
+    }
+    P = null; H = null; HV = { key: '' }; SV = { key: '' }; SELF = { shown: null, until: 0 };
+  }
+
+  function goToMenu() {
+    leaveRoom();
+    setSession({ screen: 'menu', code: null, k: null, sid: null, gameId: null });
+    $('roomArea').classList.add('hidden');
+    $('pickArea').classList.remove('hidden');
+    showScreen('screen-menu');
+  }
+
+  function handleKicked() {
+    toast('Ведущий исключил вас из игры', 'err');
+    goToMenu();
+  }
+
+  // ==================== ТЕСТЫ В БАЗЕ ====================
+  // tests/{k}      — открытый список: название, автор, число вопросов
+  // tdata/{k}/{sid} — сам тест с правильными ответами; sid получается только из PIN, поэтому без PIN тест не прочитать
+  async function testKey(name) { return (await sha256hex(String(name).trim().toLowerCase().replace(/\s+/g, ' '))).slice(0, 24); }
+  async function testSid(k, pin) { return sha256hex('marmalade|' + k + '|' + String(pin).trim()); }
+
+  async function fetchTest(k, pin) {
+    const sid = await testSid(k, pin);
+    const s = await db.ref(`tdata/${k}/${sid}`).get();
+    if (!s.exists()) return null;
+    const t = s.val();
+    t.questions = toArr(t.questions).map(q => Object.assign({}, q, { options: toArr(q.options) }));
+    return { k, sid, test: t };
+  }
+
+  async function saveTestToDb(name, pin, creator, questions) {
+    const k = await testKey(name), sid = await testSid(k, pin);
+    const [idx, dat] = await Promise.all([db.ref('tests/' + k).get(), db.ref(`tdata/${k}/${sid}`).get()]);
+    let token;
+    if (dat.exists()) token = dat.val().token;
+    else if (idx.exists()) throw new Error('TAKEN');
+    else token = randId();
+    await db.ref(`tdata/${k}/${sid}`).set({ name, creator, questions, token, updatedAt: TS });
+    await db.ref('tests/' + k).set({ name, creator, count: questions.length, updatedAt: TS, p: token });
+    return { k, sid };
+  }
+
+  async function loadTestsInto(select, preselectK) {
+    select.innerHTML = '<option value="">Загрузка тестов...</option>';
+    try {
+      const s = await db.ref('tests').get();
+      const list = Object.entries(s.val() || {}).map(([k, v]) => Object.assign({ k }, v))
+        .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
+      if (!list.length) { select.innerHTML = '<option value="">Нет созданных тестов</option>'; return; }
+      select.innerHTML = list.map(t => `<option value="${esc(t.k)}">${esc(t.name)} · ${t.count || '?'} вопр.${t.creator ? ' · ' + esc(t.creator) : ''}</option>`).join('');
+      if (preselectK && list.some(t => t.k === preselectK)) select.value = preselectK;
+    } catch (e) {
+      select.innerHTML = '<option value="">Ошибка загрузки тестов</option>';
+      toast(fbError(e), 'err');
+    }
+  }
+
+  // ==================== КОНСТРУКТОР ====================
+  function newPage() {
+    const last = pages[pages.length - 1];
+    return { question: '', imageUrl: '', options: ['', ''], correct: 0, time: (last && last.time) || DEFAULT_TIME };
+  }
+  function applyTimeToAll() {
+    saveCurrentPageData();
+    const t = qTimeOf(pages[activePageIndex]);
+    pages.forEach(p => p.time = t);
+    saveDraft();
+    toast(`Всем вопросам: ${t} сек ⏱`, 'ok');
+  }
+  function openCreator() {
+    if (!requireName()) return;
+    leaveRoom();
+    const draft = load(KEY.draft, null);
+    if (draft && Array.isArray(draft.pages) && draft.pages.length) {
+      pages = draft.pages;
+      activePageIndex = Math.min(draft.activePageIndex || 0, pages.length - 1);
+      $('testIdInput').value = draft.testId || '';
+      $('testPinInput').value = draft.pin || '';
+    } else {
+      pages = [newPage()]; activePageIndex = 0;
+      $('testIdInput').value = ''; $('testPinInput').value = '';
+    }
+    setSession({ screen: 'creator' });
+    showScreen('screen-creator');
+    renderCreatorPage();
+  }
+  function openCreatorWith(name, pin, qs) {
+    pages = qs.map(q => ({ question: q.question || '', imageUrl: q.imageUrl || '', options: (q.options || []).slice(0, 6),
+                           correct: Number(q.correct) || 0, time: qTimeOf(q) }));
+    if (!pages.length) pages = [newPage()];
+    activePageIndex = 0;
+    store(KEY.draft, { testId: name, pin, pages, activePageIndex });
+    openCreator();
+  }
+  function saveDraft() { store(KEY.draft, { testId: $('testIdInput').value, pin: $('testPinInput').value, pages, activePageIndex }); }
+  function resetDraft() {
+    if (!confirm('Стереть все вопросы и начать новый тест?')) return;
+    forget(KEY.draft);
+    pages = [newPage()]; activePageIndex = 0;
+    $('testIdInput').value = ''; $('testPinInput').value = '';
+    renderCreatorPage();
+  }
+  function saveCurrentPageData() {
+    const page = pages[activePageIndex];
+    if (!page) return;
+    page.question = $('qTitle').value;
+    page.imageUrl = $('selectedImageUrl').value.trim();
+    page.time = Number($('qTime').value) || DEFAULT_TIME;
+    const opts = []; let correctIdx = 0;
+    document.querySelectorAll('.option-row').forEach((row, idx) => {
+      opts.push(row.querySelector('input[type="text"]').value);
+      if (row.querySelector('input[type="radio"]').checked) correctIdx = idx;
+    });
+    page.options = opts;
+    page.correct = correctIdx;
+    saveDraft();
+  }
+  function normalizeImageUrl(url) {
+    url = String(url || '').trim();
+    const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
+    if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1000`;
+    return url;
+  }
+  function onImageUrlInput() {
+    const fixed = normalizeImageUrl($('selectedImageUrl').value);
+    if (fixed !== $('selectedImageUrl').value.trim()) $('selectedImageUrl').value = fixed;
+    pages[activePageIndex].imageUrl = fixed;
+    renderChosenImage();
+    saveDraft();
+  }
+  function renderChosenImage() {
+    const url = $('selectedImageUrl').value.trim();
+    const box = $('imagePreview'), img = $('imagePreviewImg'), status = $('imageStatus');
+    status.className = 'image-status hidden';
+    if (!url) { box.classList.add('hidden'); img.removeAttribute('src'); return; }
+    if (!/^https?:\/\//i.test(url)) {
+      box.classList.add('hidden');
+      status.className = 'image-status err';
+      status.textContent = 'Ссылка должна начинаться с http:// или https://';
+      return;
+    }
+    status.className = 'image-status';
+    status.textContent = 'Загружаем картинку…';
+    img.onload = () => { status.className = 'image-status hidden'; box.classList.remove('hidden'); };
+    img.onerror = () => {
+      box.classList.add('hidden');
+      status.className = 'image-status err';
+      status.textContent = 'Картинка не открывается. Нужна прямая ссылка на изображение (правой кнопкой → «Копировать адрес изображения»).';
+    };
+    img.src = url;
+  }
+  function clearImage() {
+    $('selectedImageUrl').value = '';
+    pages[activePageIndex].imageUrl = '';
+    renderChosenImage();
+    saveDraft();
+  }
+  function renderCreatorPage() {
+    const page = pages[activePageIndex];
+    $('currentQuestionTitleLabel').innerText = `Вопрос ${activePageIndex + 1}`;
+    $('qTitle').value = page.question || '';
+    $('selectedImageUrl').value = page.imageUrl || '';
+    const t = qTimeOf(page);
+    const choices = TIME_CHOICES.includes(t) ? TIME_CHOICES : TIME_CHOICES.concat(t).sort((a, b) => a - b);
+    $('qTime').innerHTML = choices.map(s => `<option value="${s}" ${s === t ? 'selected' : ''}>${s < 60 ? s + ' сек' : Math.floor(s / 60) + ' мин' + (s % 60 ? ' ' + s % 60 + ' сек' : '')}</option>`).join('');
+    $('deleteQuestionBtn').classList.toggle('hidden', pages.length < 2);
+    renderChosenImage();
+    const container = $('optionsContainer');
+    container.innerHTML = '';
+    page.options.forEach((optText, idx) => {
+      const row = document.createElement('div');
+      row.className = 'option-row';
+      row.innerHTML = `
+        <span class="chip c-${idx % 6}">${SHAPES[idx % 6]}</span>
+        <input type="text" class="opt-input" placeholder="Вариант ${idx + 1}">
+        <label class="correct-toggle" title="Правильный ответ">
+          <input type="radio" name="correctOptionRadio" ${page.correct === idx ? 'checked' : ''}><span>✓</span>
+        </label>`;
+      const ti = row.querySelector('input[type="text"]');
+      ti.value = optText;
+      ti.oninput = saveCurrentPageData;
+      row.querySelector('input[type="radio"]').onchange = saveCurrentPageData;
+      container.appendChild(row);
+    });
+    renderPagesBar();
+    saveDraft();
+  }
+  function renderPagesBar() {
+    const bar = $('pagesContainer');
+    bar.innerHTML = '';
+    pages.forEach((_, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'page-btn' + (idx === activePageIndex ? ' active' : '');
+      btn.innerText = idx + 1;
+      btn.onclick = () => { saveCurrentPageData(); activePageIndex = idx; renderCreatorPage(); };
+      bar.appendChild(btn);
+    });
+    const add = document.createElement('button');
+    add.className = 'page-btn add'; add.title = 'Добавить вопрос'; add.innerText = '+';
+    add.onclick = addNewQuestionPage;
+    bar.appendChild(add);
+  }
+  function addNewQuestionPage() {
+    saveCurrentPageData();
+    pages.push(newPage());
+    activePageIndex = pages.length - 1;
+    renderCreatorPage();
+    $('qTitle').focus();
+  }
+  function removeQuestionPage() {
+    if (pages.length < 2 || !confirm(`Удалить вопрос ${activePageIndex + 1}?`)) return;
+    pages.splice(activePageIndex, 1);
+    activePageIndex = Math.max(0, activePageIndex - 1);
+    renderCreatorPage();
+  }
+  function addOptionField() {
+    saveCurrentPageData();
+    if (pages[activePageIndex].options.length < 6) { pages[activePageIndex].options.push(''); renderCreatorPage(); }
+    else toast('Максимум 6 вариантов');
+  }
+  function removeOptionField() {
+    saveCurrentPageData();
+    const p = pages[activePageIndex];
+    if (p.options.length > 2) { p.options.pop(); if (p.correct >= p.options.length) p.correct = 0; renderCreatorPage(); }
+    else toast('Нужно минимум 2 варианта');
+  }
+
+  async function finishAndSaveAllQuestions() {
+    saveCurrentPageData();
+    const testId = $('testIdInput').value.trim();
+    const pin = $('testPinInput').value.trim();
+    if (!testId) { toast('Введите название теста!', 'err'); $('testIdInput').focus(); return; }
+    if (pin.length < 4) { toast('Придумайте PIN ведущего (минимум 4 символа)', 'err'); $('testPinInput').focus(); return; }
+    for (let i = 0; i < pages.length; i++) {
+      const p = pages[i];
+      if (!p.question.trim() || p.options.filter(o => o.trim()).length < 2) {
+        toast(`Заполните вопрос и минимум 2 ответа в вопросе ${i + 1}`, 'err');
+        activePageIndex = i; renderCreatorPage(); return;
+      }
+      if (!(p.options[p.correct] || '').trim()) {
+        toast(`В вопросе ${i + 1} правильный ответ пустой`, 'err');
+        activePageIndex = i; renderCreatorPage(); return;
+      }
+    }
+    const payload = pages.map(p => {
+      const filled = p.options.map((o, idx) => ({ o: o.trim(), idx })).filter(x => x.o);
+      return { question: p.question.trim(), options: filled.map(x => x.o),
+               correct: Math.max(0, filled.findIndex(x => x.idx === p.correct)), imageUrl: p.imageUrl || '', time: qTimeOf(p) };
+    });
+    const btn = $('saveTestBtn');
+    setBtn(btn, true, 'Сохраняем…');
+    try {
+      const r = await saveTestToDb(testId, pin, getName(), payload);
+      const pins = load(KEY.pins, {}); pins[r.k] = pin; store(KEY.pins, pins);
+      forget(KEY.draft);
+      toast(`Тест сохранён (${payload.length} вопр.) 🎉 Откройте комнату для игроков`, 'ok');
+      openHostScreen(r.k);
+    } catch (e) {
+      if (e.message === 'TAKEN') toast(`Тест «${testId}» уже есть, и у него другой PIN. Введите его PIN или выберите другое название.`, 'err');
+      else toast(fbError(e), 'err');
+    } finally {
+      setBtn(btn, false, '🚀 Сохранить тест');
+    }
+  }
+
+  // ==================== ФАЙЛЫ ТЕСТОВ ====================
+  function shuffleQuestion(q) {
+    const order = q.options.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    return Object.assign({}, q, { options: order.map(i => q.options[i]), correct: order.indexOf(q.correct) });
+  }
+  function fixOptionCount(q) {
+    // не больше 6 вариантов, верный всегда остаётся
+    if (q.options.length <= 6) return q;
+    const right = q.options[q.correct];
+    const others = q.options.filter((_, i) => i !== q.correct).slice(0, 5);
+    return Object.assign({}, q, { options: [right].concat(others), correct: 0 });
+  }
+
+  function parseTxt(text) {
+    let name = '', pin = '', time = DEFAULT_TIME, cur = null;
+    const qs = [];
+    text.split(/\r?\n/).forEach(raw => {
+      const t = raw.trim();
+      if (!t) return;
+      let m = t.match(/^#\s*(тест|название|test|pin|пин|время|time)\s*:\s*(.*)$/i);
+      if (m) {
+        const key = m[1].toLowerCase(), val = m[2].trim();
+        if (/тест|название|test/.test(key)) name = val;
+        else if (/pin|пин/.test(key)) pin = val;
+        else { const n = parseInt(val, 10); if (n > 0) time = Math.min(600, n); }
+        return;
+      }
+      if (t.startsWith('#')) return;
+      if ((m = t.match(/^\?\s*(.*)$/))) { cur = { question: m[1], options: [], correct: -1, imageUrl: '', time }; qs.push(cur); return; }
+      if (!cur) return;
+      if ((m = t.match(/^\+\s*(.*)$/))) { if (m[1]) { if (cur.correct < 0) cur.correct = cur.options.length; cur.options.push(m[1]); } return; }
+      if ((m = t.match(/^[-–—]\s*(.*)$/))) { if (m[1]) cur.options.push(m[1]); return; }
+      if ((m = t.match(/^!\s*(https?:\/\/\S+)/i))) { cur.imageUrl = normalizeImageUrl(m[1]); return; }
+      if (!cur.options.length) cur.question += ' ' + t; // продолжение текста вопроса
+    });
+    return { name, pin, qs };
+  }
+
+  function parseCsvRows(text) {
+    const first = text.split(/\r?\n/)[0] || '';
+    const cnt = ch => first.split(ch).length;
+    const d = [';', '\t', ','].sort((a, b) => cnt(b) - cnt(a))[0];
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += c;
+      } else if (c === '"') q = true;
+      else if (c === d) { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.map(r => r.map(x => x.trim())).filter(r => r.some(x => x));
+  }
+
+  function parseCsv(text, fileName) {
+    const rows = parseCsvRows(text);
+    let name = String(fileName || '').replace(/\.[^.]+$/, ''), pin = '';
+    const qs = [];
+    if (!rows.length) return { name, pin, qs };
+    const head = rows[0].map(h => h.toLowerCase());
+    const col = re => head.findIndex(h => re.test(h));
+    const iQ = col(/^question$/), iOpt = col(/^options$/), iCor = col(/^correct$/);
+    if (iQ >= 0 && iOpt >= 0 && iCor >= 0) {
+      // старая таблица: testId | order | question | options | correct | imageUrl | creator | pin | time
+      const iT = col(/^testid$/), iImg = col(/^imageurl$/), iPin = col(/^pin$/), iTime = col(/^time$/), iOrd = col(/^order$/);
+      const body = rows.slice(1);
+      if (iOrd >= 0) body.sort((a, b) => Number(a[iOrd]) - Number(b[iOrd]));
+      body.forEach(r => {
+        let opts;
+        try { opts = JSON.parse(r[iOpt]); } catch (e) { opts = String(r[iOpt] || '').split(/\s*[|;]\s*/); }
+        opts = toArr(opts).map(o => String(o).trim()).filter(Boolean);
+        if (!r[iQ] || opts.length < 2) return;
+        if (iT >= 0 && r[iT] && !qs.length) name = r[iT];
+        if (iPin >= 0 && r[iPin] && !pin) pin = r[iPin];
+        qs.push({ question: r[iQ], options: opts, correct: Math.min(opts.length - 1, Math.max(0, parseInt(r[iCor], 10) || 0)),
+                  imageUrl: iImg >= 0 ? normalizeImageUrl(r[iImg] || '') : '', time: (iTime >= 0 && parseInt(r[iTime], 10)) || DEFAULT_TIME });
+      });
+      return { name, pin, qs };
+    }
+    // Вопрос | Верный | Неверный 1 | Неверный 2 | Неверный 3
+    const body = /вопрос|question/i.test(rows[0][0] || '') ? rows.slice(1) : rows;
+    body.forEach(r => {
+      const opts = r.slice(1).filter(Boolean);
+      if (!r[0] || opts.length < 2) return;
+      qs.push({ question: r[0], options: opts, correct: 0, imageUrl: '', time: DEFAULT_TIME });
+    });
+    return { name, pin, qs };
+  }
+
+  function onFilePicked(input) {
+    const f = input.files && input.files[0];
+    input.value = '';
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || '').replace(/^﻿/, '');
+      const isCsv = /\.csv$/i.test(f.name) || (!/^\s*[#?]/m.test(text) && /[;,\t]/.test(text.split(/\r?\n/)[0] || ''));
+      const r = isCsv ? parseCsv(text, f.name) : parseTxt(text);
+      const bad = [];
+      const qs = r.qs.filter((q, i) => {
+        const ok = q.question.trim() && q.options.length >= 2 && q.correct >= 0;
+        if (!ok) bad.push(i + 1);
+        return ok;
+      }).map(q => shuffleQuestion(fixOptionCount(q)));
+      if (!qs.length) { toast('В файле не нашлось вопросов. Проверьте формат: «? вопрос», «+ верный», «- неверный».', 'err'); return; }
+      const curName = $('testIdInput').value.trim(), curPin = $('testPinInput').value.trim();
+      const hasWork = pages.some(p => p.question.trim());
+      if (hasWork && !confirm(`Заменить текущие вопросы на ${qs.length} вопр. из файла?`)) return;
+      openCreatorWith(r.name || curName, r.pin || curPin, qs);
+      toast(`Загружено вопросов: ${qs.length}` + (bad.length ? `. Пропущены (нет верного ответа или вариантов): ${bad.join(', ')}` : '') + '. Проверьте и нажмите «Сохранить тест».', bad.length ? '' : 'ok');
+    };
+    reader.onerror = () => toast('Не удалось прочитать файл', 'err');
+    reader.readAsText(f, 'utf-8');
+  }
+
+  function testToText(name, pin, qs) {
+    const lines = [`# Тест: ${name || 'Без названия'}`];
+    if (pin) lines.push(`# PIN: ${pin}`);
+    let time = null;
+    qs.forEach(q => {
+      const opts = (q.options || []).map(o => String(o).trim());
+      if (!String(q.question || '').trim() || opts.filter(Boolean).length < 2) return;
+      const t = qTimeOf(q);
+      if (t !== time) { lines.push(`# Время: ${t}`); time = t; }
+      lines.push('', `? ${String(q.question).trim()}`);
+      if (q.imageUrl) lines.push(`! ${q.imageUrl}`);
+      const c = Number(q.correct) || 0;
+      if (opts[c]) lines.push(`+ ${opts[c]}`);
+      opts.forEach((o, i) => { if (i !== c && o) lines.push(`- ${o}`); });
+    });
+    return lines.join('\n') + '\n';
+  }
+  function downloadText(fileName, text) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' }));
+    a.download = fileName.replace(/[\\/:*?"<>|]+/g, '_') + '.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+  function downloadDraft() {
+    saveCurrentPageData();
+    const name = $('testIdInput').value.trim() || 'Мой тест';
+    downloadText(name, testToText(name, $('testPinInput').value.trim(), pages));
+  }
+  async function hostGetTestWithPin() {
+    const k = $('hostTestSelect').value, pin = $('hostPinInput').value.trim();
+    if (!k) { toast('Выберите тест', 'err'); return null; }
+    if (!pin) { toast('Введите PIN ведущего', 'err'); $('hostPinInput').focus(); return null; }
+    try {
+      const r = await fetchTest(k, pin);
+      if (!r) { toast('Неверный PIN для этого теста', 'err'); return null; }
+      const pins = load(KEY.pins, {}); pins[k] = pin; store(KEY.pins, pins);
+      return Object.assign(r, { pin });
+    } catch (e) { toast(fbError(e), 'err'); return null; }
+  }
+  async function hostEditTest() {
+    const r = await hostGetTestWithPin();
+    if (r) openCreatorWith(r.test.name, r.pin, r.test.questions);
+  }
+  async function hostDownloadTest() {
+    const r = await hostGetTestWithPin();
+    if (r) downloadText(r.test.name, testToText(r.test.name, r.pin, r.test.questions));
+  }
+
+  // ==================== ТАБЛИЦЫ ЛИДЕРОВ ====================
+  function playersArr(map) {
+    return Object.entries(map || {}).filter(([, p]) => p && p.name)
+      .map(([id, p]) => ({ id, name: p.name, score: p.score || 0, correct: p.correct || 0, answered: p.answered || 0, finished: !!p.finished }));
+  }
+  function rankOf(players, id) {
+    const me = players.find(p => p.id === id);
+    if (!me) return null;
+    return { rank: 1 + players.filter(p => p.score > me.score).length, of: players.length, me };
+  }
+  function renderBoard(players, total, meId, by = 'score', opts = {}) {
+    const byCorrect = by === 'correct';
+    let list = players.slice().sort((a, b) => byCorrect
+      ? (b.correct - a.correct) || (b.score - a.score) || (b.answered - a.answered)
+      : (b.score - a.score) || (b.correct - a.correct) || (b.answered - a.answered));
+    if (opts.limit) list = list.slice(0, opts.limit);
+    return list.map((p, idx) => {
+      const isMe = !!meId && p.id === meId;
+      const progress = opts.sync ? '' : (p.finished ? '✓ закончил(а)' : `ответил(а) ${p.answered} из ${total || '?'}`);
+      const status = [progress, byCorrect ? `${p.score} б.` : `верных: ${p.correct}`].filter(Boolean).join(' · ');
+      const lead = byCorrect ? p.correct : p.score;
+      const kick = opts.kick ? `<button class="kick" title="Исключить из игры" data-id="${esc(p.id)}" onclick="hostKick(this.dataset.id)">✕</button>` : '';
+      return `
+        <div class="leaderboard-item ${isMe ? 'me' : ''} ${idx === 0 && lead > 0 ? 'gold' : ''}">
+          <span class="place">${MEDALS[idx] || idx + 1}</span>
+          ${avatar(p.name)}
+          <span class="name">${esc(p.name)}${isMe ? ' (вы)' : ''}
+            <small>${status}</small>
+            ${(opts.sync || p.finished) ? '' : `<div class="mini-bar"><div style="width:${total ? Math.round(p.answered / total * 100) : 0}%"></div></div>`}
+          </span>
+          <b>${byCorrect ? `${p.correct}${total ? ' из ' + total : ''} ✓` : p.score + ' б.'}</b>
+          ${kick}
+        </div>`;
+    }).join('');
+  }
+  function renderBoards(players, total, meId, skipFirstTitle, opts = {}) {
+    if (!players.length) return '';
+    const title = t => `<label class="field-label">${t}</label>`;
+    return (skipFirstTitle ? '' : title('🏆 Топ по баллам'))
+      + renderBoard(players, total, meId, 'score', opts)
+      + title('🎯 Топ по правильным ответам')
+      + renderBoard(players, total, meId, 'correct', Object.assign({}, opts, { kick: false }));
+  }
+  function tilesHTML(q, rev) {
+    return '<div class="tiles">' + toArr(q.options).map((o, i) => {
+      const cls = rev ? (i === rev.correctIdx ? ' right' : ' dim') : '';
+      const counts = rev ? toArr(rev.counts) : [];
+      return `<div class="opt-tile c-${i % 6}${cls}"><span class="shape">${SHAPES[i % 6]}</span><span class="t">${esc(o)}</span>${rev ? `<b class="cnt">${counts[i] || 0}</b>` : ''}</div>`;
+    }).join('') + '</div>';
+  }
+
+  // ==================== ВЕДУЩИЙ ====================
+  async function openHostScreen(preselectK) {
+    if (!requireName()) return;
+    leaveRoom();
+    setSession({ screen: 'host', code: null, k: null, sid: null });
+    $('hostPick').classList.remove('hidden');
+    $('hostRoom').classList.add('hidden');
+    const o = load(KEY.hostOpts, { mode: 'self', shuffle: false, auto: false });
+    const radio = document.querySelector(`input[name="gameMode"][value="${o.mode === 'sync' ? 'sync' : 'self'}"]`);
+    if (radio) radio.checked = true;
+    $('hostShuffle').checked = !!o.shuffle;
+    $('hostAuto').checked = !!o.auto;
+    showScreen('screen-host');
+    await loadTestsInto($('hostTestSelect'), preselectK);
+    fillHostPin();
+  }
+  function fillHostPin() { $('hostPinInput').value = load(KEY.pins, {})[$('hostTestSelect').value] || ''; }
+
+  async function hostOpenRoom() {
+    const mode = document.querySelector('input[name="gameMode"]:checked').value;
+    const shuffle = $('hostShuffle').checked;
+    const auto = mode === 'sync' && $('hostAuto').checked;
+    const btn = $('hostOpenBtn');
+    setBtn(btn, true, 'Открываем…');
+    try {
+      const r = await hostGetTestWithPin();
+      if (!r) return;
+      HT = r.test;
+      store(KEY.hostOpts, { mode, shuffle, auto: $('hostAuto').checked });
+      // старую комнату этого ведущего убираем
+      const prev = load('marmalade_fb_lastroom', null);
+      if (prev) db.ref('rooms/' + prev).remove().catch(() => {});
+      let code = null;
+      for (let i = 0; i < 12 && !code; i++) {
+        const c = String(Math.floor(100000 + Math.random() * 900000));
+        try {
+          await db.ref('rooms/' + c).set({
+            meta: { host: UID, test: HT.name, mode, shuffle, total: HT.questions.length, gameId: randId(10), created: TS },
+            state: { phase: 'lobby' }
+          });
+          code = c;
+        } catch (e) { if (!/permission/i.test(e.code || e.message || '')) throw e; }
+      }
+      if (!code) { toast('Не удалось создать комнату, попробуйте ещё раз', 'err'); return; }
+      store('marmalade_fb_lastroom', code);
+      setSession({ screen: 'host', code, k: r.k, sid: r.sid, auto, autoPaused: false });
+      showHostRoom();
+    } catch (e) {
+      toast(fbError(e), 'err');
+    } finally {
+      setBtn(btn, false, 'Открыть комнату');
+    }
+  }
+
+  async function resumeHost() {
+    showScreen('screen-loading');
+    const [t, m] = await Promise.all([db.ref(`tdata/${S.k}/${S.sid}`).get(), db.ref(`rooms/${S.code}/meta`).get()]);
+    if (!t.exists() || !m.exists() || m.val().host !== UID) { openHostScreen(); return; }
+    HT = t.val();
+    HT.questions = toArr(HT.questions).map(q => Object.assign({}, q, { options: toArr(q.options) }));
+    showHostRoom();
+  }
+
+  function showHostRoom() {
+    leaveRoom();
+    showScreen('screen-host');
+    $('hostPick').classList.add('hidden');
+    $('hostRoom').classList.remove('hidden');
+    $('hostRoomCode').textContent = S.code;
+    setHTML($('hostList'), '<div class="wait"><span class="spinner dark"></span></div>');
+    H = { code: S.code, meta: null, state: { phase: 'lobby' }, players: {}, online: {}, answers: {}, kicked: {}, joins: {},
+          loaded: {}, joinBusy: {}, selfBusy: {}, busy: {}, gone: {} };
+    const base = db.ref('rooms/' + S.code);
+    const got = name => { H.loaded[name] = true; hostProcessJoins(); };
+    listen(base.child('meta'), s => {
+      H.meta = s.val();
+      if (!H.meta) { toast('Комната удалена', 'err'); openHostScreen(); return; }
+      hostRender();
+    });
+    listen(base.child('state'), s => { H.state = s.val() || { phase: 'lobby' }; HV.key = ''; hostRender(); });
+    listen(base.child('players'), s => { H.players = s.val() || {}; got('players'); hostProcessSelf(); hostRender(); });
+    listen(base.child('online'), s => { H.online = s.val() || {}; got('online'); hostRender(); });
+    listen(base.child('kicked'), s => { H.kicked = s.val() || {}; got('kicked'); });
+    listen(base.child('joins'), s => { H.joins = s.val() || {}; got('joins'); });
+    listen(base.child('answers'), s => { H.answers = s.val() || {}; hostProcessSelf(); hostRender(); });
+    startTick(hostTick, 250);
+  }
+  const hostRef = path => db.ref(`rooms/${H.code}` + (path ? '/' + path : ''));
+  const normName = n => String(n || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+  // Ведущий принимает игроков: одинаковые имена не путаются, вернувшийся игрок получает свои баллы обратно
+  function hostProcessJoins() {
+    if (!H || !['players', 'online', 'kicked', 'joins'].every(n => H.loaded[n])) return;
+    const taken = new Set(Object.values(H.players).map(p => normName(p && p.name)));
+    Object.entries(H.joins).forEach(([uid, j]) => {
+      if (!j || !j.name || H.kicked[uid] || H.players[uid] || H.joinBusy[uid]) return;
+      if (H.gone[uid] && H.gone[uid] === j.t) return; // этот вход уже перенесён на другое устройство
+      H.joinBusy[uid] = true;
+      const name = String(j.name).trim().slice(0, 24) || 'Игрок';
+      const same = Object.entries(H.players).find(([u, p]) => u !== uid && p && normName(p.name) === normName(name));
+      let upd;
+      if (same && !H.online[same[0]]) {
+        // тот же человек с другого браузера/телефона — переносим баллы
+        const [ou, op] = same;
+        H.gone[ou] = (H.joins[ou] && H.joins[ou].t) || true;
+        upd = { [`players/${uid}`]: op, [`players/${ou}`]: null, [`joins/${ou}`]: null, [`online/${ou}`]: null };
+        const oa = H.answers[ou];
+        if (oa) upd[`answers/${uid}`] = oa;
+        upd[`answers/${ou}`] = null;
+      } else {
+        let finalName = name;
+        if (taken.has(normName(name))) { let n = 2; while (taken.has(normName(name + ' ' + n))) n++; finalName = name + ' ' + n; }
+        taken.add(normName(finalName));
+        upd = { [`players/${uid}`]: { name: finalName, score: 0, correct: 0, answered: 0, finished: false, joined: TS } };
+      }
+      hostRef().update(upd).catch(e => { console.warn(e); delete H.joinBusy[uid]; });
+    });
+    Object.keys(H.joinBusy).forEach(uid => { if (H.players[uid]) delete H.joinBusy[uid]; });
+  }
+
+  // «Каждый в своём темпе»: ведущий проверяет ответы и сразу пишет результат игроку
+  function hostProcessSelf() {
+    if (!H || !H.meta || H.meta.mode !== 'self' || H.state.phase !== 'play' || !HT) return;
+    const upd = {}, total = HT.questions.length;
+    Object.entries(H.players).forEach(([uid, p]) => {
+      if (!p) return;
+      const q = p.answered || 0;
+      if (q >= total) return;
+      const a = H.answers[uid] && H.answers[uid][q];
+      if (!a || H.selfBusy[uid + ':' + q]) return;
+      H.selfBusy[uid + ':' + q] = true;
+      const Q = HT.questions[q], limit = qTimeOf(Q);
+      const c = typeof a.c === 'number' ? a.c : -1;
+      const ms = Math.max(0, Number(a.ms) || 0);
+      const right = c >= 0 && c === Number(Q.correct) && ms <= limit * 1000 + 500;
+      const pts = right ? pointsFor(Math.min(ms, limit * 1000), limit) : 0;
+      upd[`players/${uid}/score`] = (p.score || 0) + pts;
+      upd[`players/${uid}/correct`] = (p.correct || 0) + (right ? 1 : 0);
+      upd[`players/${uid}/answered`] = q + 1;
+      upd[`players/${uid}/finished`] = q + 1 >= total;
+      upd[`players/${uid}/res`] = { q, c, right, pts, correctIdx: Number(Q.correct), ms };
+    });
+    if (Object.keys(upd).length) hostRef().update(upd).catch(e => toast(fbError(e), 'err'));
+  }
+
+  function publicQ(q) { return { question: q.question, options: toArr(q.options), imageUrl: q.imageUrl || '', time: qTimeOf(q) }; }
+
+  async function hostStart() {
+    const btn = $('hostStartBtn');
+    btn.dataset.busy = '1';
+    setBtn(btn, true, 'Запускаем…');
+    try {
+      if (H.meta.mode === 'sync') {
+        const q = HT.questions[0];
+        await hostRef().update({ answers: null, state: { phase: 'play', qIdx: 0, sub: 'question', q: publicQ(q), qStart: srvNow() + LEAD_MS, dur: qTimeOf(q) } });
+      } else {
+        await hostRef().update({ answers: null, qs: HT.questions.map(publicQ), state: { phase: 'play', startedAt: TS } });
+      }
+      sfx('start');
+    } catch (e) {
+      toast(fbError(e), 'err');
+    } finally {
+      delete btn.dataset.busy;
+      btn.disabled = false;
+    }
+  }
+
+  function hostNext() {
+    const st = H.state, n = (st.qIdx || 0) + 1;
+    if (H.busy['next' + n]) return;
+    H.busy['next' + n] = true;
+    if (n >= HT.questions.length) { hostFinish(true); return; }
+    const q = HT.questions[n];
+    hostRef('state').set({ phase: 'play', qIdx: n, sub: 'question', q: publicQ(q), qStart: srvNow() + LEAD_MS, dur: qTimeOf(q) })
+      .catch(e => { delete H.busy['next' + n]; toast(fbError(e), 'err'); });
+  }
+
+  // конец вопроса в «Все вместе»: считаем баллы и показываем правильный ответ
+  function hostReveal() {
+    const st = H.state, i = st.qIdx;
+    if (st.sub !== 'question' || H.busy['rev' + i]) return;
+    H.busy['rev' + i] = true;
+    const Q = HT.questions[i], dur = st.dur || qTimeOf(Q), correct = Number(Q.correct);
+    const counts = toArr(Q.options).map(() => 0);
+    const lateAt = st.qStart + dur * 1000 + GRACE_MS + 2000;
+    const upd = {};
+    Object.entries(H.players).forEach(([uid, p]) => {
+      if (!p) return;
+      const a = H.answers[uid] && H.answers[uid][i];
+      let c = -1, right = false, pts = 0, ms = null;
+      if (a && typeof a.c === 'number' && a.c >= 0) {
+        c = a.c;
+        if (counts[c] != null) counts[c]++;
+        ms = Math.max(0, Number(a.ms) || 0);
+        const late = a.at && a.at > lateAt;
+        if (!late && c === correct) { right = true; pts = pointsFor(Math.min(ms, dur * 1000), dur); }
+      }
+      upd[`players/${uid}/score`] = (p.score || 0) + pts;
+      upd[`players/${uid}/correct`] = (p.correct || 0) + (right ? 1 : 0);
+      upd[`players/${uid}/answered`] = i + 1;
+      upd[`players/${uid}/res`] = { q: i, c, right, pts, correctIdx: correct, ms };
+    });
+    upd['state/sub'] = 'reveal';
+    upd['state/reveal'] = { correctIdx: correct, counts };
+    upd['state/revealAt'] = TS;
+    hostRef().update(upd).catch(e => { delete H.busy['rev' + i]; toast(fbError(e), 'err'); });
+  }
+
+  function hostFinish(silent) {
+    if (!silent && H.meta.mode === 'self') {
+      const left = playersArr(H.players).filter(p => !p.finished).length;
+      if (left && !confirm(`Ещё не закончили: ${left}. Завершить игру сейчас?`)) return;
+    }
+    hostRef('state/phase').set('done').catch(e => toast(fbError(e), 'err'));
+  }
+
+  function hostToggleAuto() { setSession({ autoPaused: !S.autoPaused }); HV.key = ''; hostRender(); }
+
+  function hostKick(uid) {
+    const p = H.players[uid];
+    if (!p || !confirm(`Исключить «${p.name}» из игры?`)) return;
+    H.kicked[uid] = true; // сразу, чтобы ведущий не впустил его обратно, пока база обновляется
+    hostRef().update({ [`players/${uid}`]: null, [`kicked/${uid}`]: true, [`joins/${uid}`]: null, [`answers/${uid}`]: null })
+      .then(() => toast(`«${p.name}» исключён(а)`, 'ok'))
+      .catch(e => toast(fbError(e), 'err'));
+  }
+
+  function hostNewGame() {
+    if (!confirm('Начать новую игру? Очки обнулятся, игроки останутся в комнате.')) return;
+    const upd = { answers: null, qs: null, state: { phase: 'lobby' }, 'meta/gameId': randId(10) };
+    Object.keys(H.players).forEach(uid => {
+      upd[`players/${uid}/score`] = 0; upd[`players/${uid}/correct`] = 0; upd[`players/${uid}/answered`] = 0;
+      upd[`players/${uid}/finished`] = false; upd[`players/${uid}/res`] = null;
+    });
+    H.busy = {}; H.selfBusy = {}; HV = { key: '' };
+    hostRef().update(upd).catch(e => toast(fbError(e), 'err'));
+  }
+
+  // активные игроки = в комнате и сейчас на связи
+  function hostActive() { return playersArr(H.players).filter(p => H.online[p.id]); }
+
+  function hostTick() {
+    if (!H || !H.meta || !HT) return;
+    const st = H.state;
+    if (H.meta.mode === 'sync' && st.phase === 'play' && st.q) {
+      const now = srvNow();
+      if (st.sub === 'question') {
+        const deadline = st.qStart + st.dur * 1000;
+        const act = hostActive();
+        const answered = act.filter(p => H.answers[p.id] && H.answers[p.id][st.qIdx]).length;
+        const allIn = act.length > 0 && answered >= act.length;
+        if (now >= deadline + GRACE_MS || (S.auto && !S.autoPaused && allIn && now >= st.qStart)) hostReveal();
+      } else if (st.sub === 'reveal' && S.auto && !S.autoPaused && st.revealAt && now >= st.revealAt + AUTO_NEXT_MS) {
+        hostNext();
+      }
+      hostRenderSync();
+    }
+  }
+
+  function hostRender() {
+    if (!H || !H.meta || curScreen !== 'screen-host') return;
+    const d = H.meta, st = H.state, players = playersArr(H.players);
+    const total = d.total || (HT ? HT.questions.length : 0);
+    setText($('hostRoomCode'), H.code);
+    setText($('hostRoomName'), 'Тест: ' + d.test + (d.mode === 'sync' ? ' · 🎬 все вместе' : ' · 🏃 каждый в своём темпе'));
+    const startBtn = $('hostStartBtn'), live = $('hostLive');
+    const onlineN = players.filter(p => H.online[p.id]).length;
+
+    if (st.phase === 'lobby') {
+      live.classList.add('hidden');
+      $('hostList').classList.remove('hidden'); $('hostListLabel').classList.remove('hidden');
+      $('hostQrBox').classList.remove('hidden');
+      setText($('hostStatus'), 'Набор игроков');
+      setText($('hostListLabel'), `Игроки · ${players.length}` + (onlineN < players.length ? ` (на связи ${onlineN})` : ''));
+      setHTML($('hostList'), players.length
+        ? `<div class="players">${players.map(p => `<span class="player-tag" style="${H.online[p.id] ? '' : 'opacity:.45'}">${avatar(p.name)}${esc(p.name)}<button class="kick" title="Исключить" data-id="${esc(p.id)}" onclick="hostKick(this.dataset.id)">✕</button></span>`).join('')}</div>`
+        : '<div class="wait"><span class="dots"><span></span><span></span><span></span></span> Ждём, когда игроки зайдут в комнату…</div>');
+      startBtn.classList.remove('hidden');
+      if (!startBtn.dataset.busy) {
+        startBtn.disabled = !players.length;
+        setHTML(startBtn, players.length ? `🚀 НАЧАТЬ ИГРУ (${players.length})` : 'Ждём игроков…');
+      }
+      $('hostNewGameBtn').classList.add('hidden');
+      $('hostFinishBtn').classList.add('hidden');
+      return;
+    }
+    $('hostQrBox').classList.add('hidden');
+    startBtn.classList.add('hidden');
+    $('hostNewGameBtn').classList.remove('hidden');
+    if (d.mode === 'sync') {
+      $('hostList').classList.add('hidden'); $('hostListLabel').classList.add('hidden');
+      $('hostFinishBtn').classList.add('hidden');
+      live.classList.remove('hidden');
+      setText($('hostStatus'), st.phase === 'done' ? 'Игра завершена 🎉' : `Игра идёт · вопрос ${(st.qIdx || 0) + 1} из ${total}`);
+      hostRenderSync();
+    } else {
+      live.classList.add('hidden');
+      $('hostList').classList.remove('hidden'); $('hostListLabel').classList.remove('hidden');
+      const finished = players.filter(p => p.finished).length;
+      const allDone = st.phase === 'done' || (players.length && finished === players.length);
+      $('hostFinishBtn').classList.toggle('hidden', st.phase === 'done');
+      setText($('hostStatus'), allDone ? 'Игра завершена 🎉' : `Игра идёт · закончили ${finished} из ${players.length}`);
+      setText($('hostListLabel'), st.phase === 'done' ? '🏆 Итоги' : '🏆 Топ по баллам (обновляется сам)');
+      setHTML($('hostList'), renderBoards(players, total, null, st.phase !== 'done', { kick: st.phase !== 'done' }) || '<p class="empty">Нет игроков</p>');
+    }
+  }
+
+  function hostRenderSync() {
+    if (!H || !H.meta || H.meta.mode !== 'sync' || curScreen !== 'screen-host') return;
+    const st = H.state, box = $('hostLive'), players = playersArr(H.players);
+    const total = H.meta.total || HT.questions.length;
+    if (st.phase === 'lobby') return;
+    if (st.phase === 'done') {
+      if (HV.key !== 'done') {
+        HV.key = 'done';
+        setHTML(box, '<h3 style="text-align:center">🏁 Игра завершена</h3>' + (renderBoards(players, total, null, false, { sync: true }) || ''));
+      }
+      return;
+    }
+    if (!st.q) return;
+    const q = st.q, i = st.qIdx, now = srvNow();
+    const ph = st.sub === 'reveal' ? 'reveal' : now < st.qStart ? 'lead' : now < st.qStart + st.dur * 1000 ? 'question' : 'counting';
+    const key = i + ':' + ph + (ph === 'reveal' ? ':' + players.map(p => p.score).join(',') : '');
+    if (HV.key !== key) {
+      HV.key = key;
+      const head = `<div class="live-top"><span>Вопрос ${i + 1} из ${total}</span><span class="score-pill">👥 ${players.length}</span></div>
+                    <div class="progress"><div style="width:${Math.round(i / total * 100)}%"></div></div>`;
+      const img = q.imageUrl ? `<div class="live-img"><img src="${esc(q.imageUrl)}" alt=""></div>` : '';
+      const qt = `<p class="q-text">${esc(q.question)}</p>`;
+      let html;
+      if (ph === 'lead') {
+        html = head + '<div class="big-count" id="hlCount">…</div><p class="hint">Игроки читают вопрос — варианты появятся через пару секунд</p>' + img + qt;
+      } else if (ph === 'question') {
+        html = head + `<div class="timer-row" id="hlTimerRow"><div class="timer-num" id="hlNum">${st.dur}</div>
+                 <div class="timer-track"><div id="hlBar"></div></div></div>`
+             + img + qt + tilesHTML(q, null)
+             + '<p class="hint" id="hlAnswered" style="margin-top:0"></p>'
+             + '<button class="btn btn-ghost" onclick="hostReveal()">⏭ Показать ответ сейчас</button>';
+      } else if (ph === 'counting') {
+        html = head + img + qt + tilesHTML(q, null) + '<p class="hint" id="hlAnswered" style="margin-top:0"></p>'
+             + '<div class="wait"><span class="spinner dark"></span> Ждём ответы с медленных телефонов…</div>'
+             + '<button class="btn btn-ghost" onclick="hostReveal()">⏭ Показать ответ сейчас</button>';
+      } else {
+        const last = i + 1 >= total;
+        html = head + qt + tilesHTML(q, st.reveal)
+             + '<label class="field-label">🏆 Топ-5</label>' + renderBoard(players, total, null, 'score', { sync: true, limit: 5 })
+             + (S.auto ? '<p class="hint" id="hlAuto" style="margin:8px 0 0"></p>' : '')
+             + (last
+                 ? '<button class="btn btn-pink" onclick="hostFinish(true)">🏁 Показать итоги</button>'
+                 : '<button class="btn btn-green" onclick="hostNext()">Следующий вопрос ▶</button>')
+             + (S.auto ? '<button class="btn btn-ghost" id="hlAutoBtn" onclick="hostToggleAuto()"></button>' : '');
+      }
+      setHTML(box, html);
+    }
+    if (ph === 'lead') setText($('hlCount'), Math.max(1, Math.ceil((st.qStart - now) / 1000)));
+    if (ph === 'question' || ph === 'counting') {
+      const act = hostActive();
+      const answered = players.filter(p => H.answers[p.id] && H.answers[p.id][i]).length;
+      setText($('hlAnswered'), `Ответили: ${answered} из ${act.length || players.length}`);
+    }
+    if (ph === 'question') {
+      const left = Math.max(0, st.qStart + st.dur * 1000 - now), sec = Math.ceil(left / 1000), row = $('hlTimerRow');
+      setText($('hlNum'), sec);
+      $('hlBar').style.width = Math.min(100, left / (st.dur * 1000) * 100) + '%';
+      row.classList.toggle('danger', sec <= 3);
+      row.classList.toggle('warn', sec > 3 && left / (st.dur * 1000) <= 0.4);
+    }
+    if (ph === 'reveal' && S.auto) {
+      const last = i + 1 >= total, left = (st.revealAt || now) + AUTO_NEXT_MS - now;
+      const btn = $('hlAutoBtn');
+      if (btn) setText(btn, S.autoPaused ? '▶ Включить автопереход' : '⏸ Остановить автопереход');
+      setText($('hlAuto'), S.autoPaused ? 'Автопереход остановлен' : `${last ? 'Итоги' : 'Следующий вопрос'} через ${Math.max(0, Math.ceil(left / 1000))}…`);
+    }
+  }
+
+  // ==================== ИГРОК: ВХОД ====================
+  function openLobby() {
+    if (!requireName()) return;
+    leaveRoom();
+    setSession({ screen: 'lobby', code: null, gameId: null });
+    $('pickArea').classList.remove('hidden');
+    $('roomArea').classList.add('hidden');
+    showScreen('screen-lobby');
+    $('roomCodeInput').value = '';
+    $('roomCodeInput').focus();
+  }
+
+  async function joinRoom() {
+    const code = $('roomCodeInput').value.trim();
+    if (code.length !== 6) { toast('Код состоит из 6 цифр', 'err'); $('roomCodeInput').focus(); return; }
+    const btn = $('joinBtn');
+    setBtn(btn, true, 'Проверяем код…');
+    try {
+      const m = await db.ref(`rooms/${code}/meta`).get();
+      if (!m.exists()) { toast('Комнаты с таким кодом нет. Проверьте код на экране ведущего.', 'err'); return; }
+      const k = await db.ref(`rooms/${code}/kicked/${UID}`).get();
+      if (k.val()) { toast('Ведущий исключил вас из этой игры', 'err'); return; }
+      setSession({ screen: 'lobby', code });
+      playerConnect(code);
+    } catch (e) {
+      toast(fbError(e), 'err');
+    } finally {
+      setBtn(btn, false, 'Войти в игру');
+    }
+  }
+
+  function playerConnect(code) {
+    leaveRoom();
+    P = { code, meta: undefined, state: null, players: {}, qs: null, qsLoading: false, joinT: Date.now() };
+    setSession({ code });
+    showScreen('screen-lobby');
+    $('pickArea').classList.add('hidden');
+    $('roomArea').classList.remove('hidden');
+    setText($('roomName'), '…');
+    setText($('waitLabel'), 'Подключаемся…');
+    const base = db.ref('rooms/' + code);
+    listen(base.child('meta'), s => {
+      if (!P) return;
+      P.meta = s.val();
+      if (!P.meta) { toast('Комната закрыта ведущим', 'err'); goToMenu(); return; }
+      playerRoute();
+    });
+    listen(base.child('state'), s => { if (P) { P.state = s.val() || { phase: 'lobby' }; playerRoute(); } });
+    listen(base.child('players'), s => { if (P) { P.players = s.val() || {}; playerRoute(); } });
+    listen(base.child('kicked/' + UID), s => { if (P && s.val()) handleKicked(); });
+    // присутствие: при обрыве связи сервер сам уберёт отметку «на связи»; при каждом переподключении заново стучимся к ведущему
+    listen(db.ref('.info/connected'), s => {
+      if (!P || !s.val()) return;
+      const r = base.child('online/' + UID);
+      r.onDisconnect().remove();
+      r.set(true).catch(() => {});
+      base.child('joins/' + UID).set({ name: getName(), t: TS }).catch(() => {});
+    });
+    startTick(playerTick, 150);
+  }
+
+  function playerRoute() {
+    if (!P || P.meta === undefined || !P.meta || !P.state) return;
+    const me = P.players[UID];
+    if (P.meta.gameId !== S.gameId) {
+      // новая игра — сбрасываем всё, что относилось к прошлой
+      setSession({ gameId: P.meta.gameId, ansQ: null, choice: null, shownIdx: null, shownAt: null, waitQ: null, pendingAns: null,
+                   qStartIdx: null, qStartAt: null, revealed: null, celebrated: null });
+      P.qs = null; SV = { key: '' }; SELF = { shown: null, until: 0 }; stopTimer();
+    }
+    const ph = P.state.phase || 'lobby';
+    if (!me || ph === 'lobby') { stopTimer(); setSession({ screen: 'lobby' }); renderLobby(); return; }
+    if (ph === 'done') { stopTimer(); renderResults(); return; }
+    setSession({ screen: 'game' });
+    if (P.meta.mode === 'sync') renderSync(); else renderSelf();
+  }
+
+  function playerTick() {
+    if (!P || !P.meta || !P.state) return;
+    const ph = P.state.phase;
+    if ((ph === 'lobby' || !P.players[UID]) && curScreen === 'screen-lobby') renderLobby();
+    else if (ph === 'play' && P.meta.mode === 'sync') syncTick();
+  }
+
+  function renderLobby() {
+    showOnce('screen-lobby');
+    $('pickArea').classList.add('hidden');
+    $('roomArea').classList.remove('hidden');
+    setText($('roomName'), P.meta.test);
+    setText($('modeInfo'), P.meta.mode === 'sync' ? '🎬 Все вместе: вопросы переключает ведущий' : '🏃 Каждый отвечает в своём темпе');
+    const list = playersArr(P.players);
+    setText($('playersCount'), list.length);
+    setHTML($('playersList'), list.map(p => `<span class="player-tag">${avatar(p.name)}${esc(p.name)}${p.id === UID ? ' (вы)' : ''}</span>`).join(''));
+    const me = P.players[UID];
+    setText($('waitLabel'), me
+      ? (P.state.phase === 'lobby' ? 'Ожидаем, когда ведущий начнёт игру…' : 'Подключаемся к игре…')
+      : (Date.now() - P.joinT > 8000 ? 'Ждём, когда ведущий впустит… Экран ведущего должен быть открыт.' : 'Подключаемся…'));
+  }
+
+  // ==================== ИГРОК: ВАРИАНТЫ ====================
+  function hash53(str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  function optionOrder(n, qIdx) {
+    const order = Array.from({ length: n }, (_, i) => i);
+    if (!P || !P.meta || !P.meta.shuffle) return order;
+    let s = parseInt(hash53(UID + ':' + (P.meta.gameId || '') + ':' + qIdx), 36) >>> 0;
+    const rnd = () => {
+      s = (s + 0x6D2B79F5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    return order;
+  }
+  function drawOptions(q, idx, handler) {
+    const area = $('optionsArea'), opts = toArr(q.options);
+    area.innerHTML = '';
+    optionOrder(opts.length, idx).forEach((orig, pos) => {
+      const btn = document.createElement('button');
+      btn.className = `option-btn c-${pos % 6}`;
+      btn.dataset.orig = orig;
+      btn.innerHTML = `<span class="shape">${SHAPES[pos % 6]}</span><span></span>`;
+      btn.lastChild.textContent = opts[orig];
+      if (handler) btn.onclick = () => handler(orig); else btn.disabled = true;
+      area.appendChild(btn);
+    });
+  }
+  function markOptions(picked, correct) {
+    document.querySelectorAll('#optionsArea .option-btn').forEach(b => {
+      const o = Number(b.dataset.orig);
+      b.classList.remove('right', 'wrong', 'dim', 'picked');
+      if (correct != null) b.classList.add(o === correct ? 'right' : (o === picked ? 'wrong' : 'dim'));
+      else if (picked != null) b.classList.add(o === picked ? 'picked' : 'dim');
+    });
+  }
+  function setFeedback(cls, html) { const f = $('feedback'); f.className = 'feedback ' + cls; f.innerHTML = html; }
+  function rankLine() {
+    const rk = rankOf(playersArr(P.players), UID);
+    return rk ? `<small class="rank">🏅 Вы ${rk.rank}-й из ${rk.of}</small>` : '';
+  }
+  function drawQuestionBase(q, idx, total) {
+    $('qNum').innerText = `Вопрос ${idx + 1} из ${total}`;
+    $('progressBar').style.width = (idx / total * 100) + '%';
+    $('qTextDisplay').innerText = q.question;
+    $('gameImageArea').innerHTML = q.imageUrl ? `<img src="${esc(q.imageUrl)}" alt="">` : '';
+    $('feedback').className = 'feedback'; $('feedback').textContent = '';
+    $('syncInfo').innerHTML = ''; $('syncBoard').innerHTML = '';
+  }
+  function myScore() { const me = P && P.players[UID]; return me ? (me.score || 0) : 0; }
+
+  // ==================== ИГРОК: «КАЖДЫЙ В СВОЁМ ТЕМПЕ» ====================
+  function stopTimer() { if (timerId) clearInterval(timerId); timerId = null; }
+  function elapsedMs() { return Math.max(0, Date.now() - (S.qStartAt || Date.now())); }
+  function timerClasses(sec, frac) {
+    const row = $('timerRow');
+    row.classList.toggle('danger', sec <= 3);
+    row.classList.toggle('warn', sec > 3 && frac <= 0.4);
+    if (sec <= 3 && sec > 0 && sec !== lastTickSec) { lastTickSec = sec; sfx('tick'); vib(15); }
+  }
+
+  async function loadQs() {
+    if (P.qsLoading) return;
+    P.qsLoading = true;
+    try {
+      const s = await db.ref(`rooms/${P.code}/qs`).get();
+      if (P) { P.qs = toArr(s.val()); }
+    } catch (e) { toast(fbError(e), 'err'); }
+    if (P) { P.qsLoading = false; setTimeout(playerRoute, P.qs && P.qs.length ? 0 : 1500); }
+  }
+
+  function renderSelf() {
+    showOnce('screen-game');
+    $('liveScore').innerText = myScore();
+    if (!P.qs || !P.qs.length) {
+      if (SELF.shown !== 'load') { SELF.shown = 'load'; $('timerRow').classList.add('hidden'); $('qTextDisplay').textContent = 'Загружаем вопросы…'; $('optionsArea').innerHTML = ''; }
+      loadQs();
+      return;
+    }
+    const me = P.players[UID], total = P.qs.length, idx = me.answered || 0;
+    // пришёл результат по отправленному ответу
+    if (S.waitQ != null && idx > S.waitQ) {
+      const q = S.waitQ, res = me.res;
+      setSession({ waitQ: null, pendingAns: null, qStartAt: null });
+      if (res && res.q === q) {
+        if (SELF.shown !== q && SELF.shown !== 'w' + q) { drawQuestionBase(P.qs[q], q, total); drawOptions(P.qs[q], q, null); }
+        showSelfFeedback(res);
+        SELF.until = Date.now() + 1900;
+        SELF.shown = 'f' + q;
+        setTimeout(() => { if (P) playerRoute(); }, 1950);
+        return;
+      }
+    }
+    if (Date.now() < SELF.until) return;
+    if (idx >= total) { stopTimer(); renderResults(); return; }
+    showOnce('screen-game');
+    if (S.waitQ === idx) {
+      if (SELF.shown !== 'w' + idx) {
+        SELF.shown = 'w' + idx;
+        stopTimer();
+        drawQuestionBase(P.qs[idx], idx, total);
+        drawOptions(P.qs[idx], idx, null);
+        $('timerRow').classList.add('hidden');
+        markOptions(S.choice >= 0 ? S.choice : null, null);
+        setFeedback('', '<span class="spinner dark" style="display:inline-block"></span><small>Проверяем ответ…</small>');
+        if (S.pendingAns) sendAnswer(idx, S.pendingAns); // после обновления страницы досылаем, если не дошло
+      }
+      return;
+    }
+    if (SELF.shown !== idx) renderQuestionSelf(idx);
+  }
+
+  function renderQuestionSelf(idx) {
+    SELF.shown = idx;
+    stopTimer();
+    const q = P.qs[idx], total = P.qs.length;
+    if (S.qStartIdx !== idx || !S.qStartAt) setSession({ qStartIdx: idx, qStartAt: Date.now() });
+    drawQuestionBase(q, idx, total);
+    $('timerRow').classList.remove('hidden', 'warn', 'danger');
+    drawOptions(q, idx, selfAnswer);
+    startTimer(q, idx);
+  }
+
+  function startTimer(q, idx) {
+    stopTimer();
+    lastTickSec = null;
+    const limit = qTimeOf(q);
+    const tick = () => {
+      const el = elapsedMs(), left = Math.max(0, limit * 1000 - el), sec = Math.ceil(left / 1000);
+      setText($('timerNum'), sec);
+      $('timerBar').style.width = (left / (limit * 1000) * 100) + '%';
+      setText($('ptsNow'), left > 0 ? pointsFor(el, limit) + ' б.' : '0 б.');
+      timerClasses(sec, left / (limit * 1000));
+      if (left <= 0) { stopTimer(); selfTimeUp(idx); }
+    };
+    tick();
+    if (SELF.shown === idx) timerId = setInterval(tick, 100);
+  }
+
+  function sendAnswer(idx, ans) {
+    db.ref(`rooms/${P.code}/answers/${UID}/${idx}`).set({ c: ans.c, ms: ans.ms, at: TS })
+      .catch(e => { if (!/permission/i.test(e.code || e.message || '')) console.warn(e); }); // уже отправлен — это нормально
+  }
+
+  function selfAnswer(orig) {
+    const me = P.players[UID], idx = me.answered || 0;
+    if (SELF.shown !== idx || S.waitQ === idx) return;
+    const q = P.qs[idx], el = elapsedMs(), limit = qTimeOf(q);
+    if (el >= limit * 1000) { selfTimeUp(idx); return; }
+    stopTimer();
+    sfx('tap'); vib(25);
+    const ans = { c: orig, ms: Math.round(el) };
+    setSession({ waitQ: idx, choice: orig, pendingAns: ans });
+    SELF.shown = 'w' + idx;
+    document.querySelectorAll('#optionsArea .option-btn').forEach(b => b.disabled = true);
+    markOptions(orig, null);
+    setFeedback('', '<span class="spinner dark" style="display:inline-block"></span><small>Проверяем ответ…</small>');
+    sendAnswer(idx, ans);
+  }
+
+  function selfTimeUp(idx) {
+    if (!P || S.waitQ === idx || SELF.shown !== idx) return;
+    stopTimer();
+    const ans = { c: -1, ms: qTimeOf(P.qs[idx]) * 1000 };
+    setSession({ waitQ: idx, choice: -1, pendingAns: ans });
+    SELF.shown = 'w' + idx;
+    document.querySelectorAll('#optionsArea .option-btn').forEach(b => b.disabled = true);
+    markOptions(null, null);
+    setFeedback('bad', '⏰ Время вышло!<small>Проверяем…</small>');
+    sendAnswer(idx, ans);
+  }
+
+  function showSelfFeedback(res) {
+    $('timerRow').classList.add('hidden');
+    markOptions(res.c >= 0 ? res.c : null, res.correctIdx);
+    if (res.c < 0) { setFeedback('bad', '⏰ Время вышло!<small>0 баллов</small>' + rankLine()); sfx('wrong'); vib([40, 40, 40]); }
+    else if (res.right) { setFeedback('ok', `✅ Верно! +${res.pts}<small>ответ за ${((res.ms || 0) / 1000).toFixed(1)} сек</small>` + rankLine()); sfx('right'); vib(60); }
+    else { setFeedback('bad', '❌ Неверно<small>0 баллов</small>' + rankLine()); sfx('wrong'); vib([40, 40, 40]); }
+    $('liveScore').innerText = myScore();
+  }
+
+  // ==================== ИГРОК: «ВСЕ ВМЕСТЕ» ====================
+  function renderSync() { showOnce('screen-game'); syncTick(); }
+
+  function syncPhase(st) {
+    const now = srvNow();
+    if (st.sub === 'reveal') return 'reveal';
+    if (now < st.qStart) return 'lead';
+    // честное время: отсчёт идёт с момента, когда вопрос появился на ЭТОМ телефоне
+    if (S.shownIdx !== st.qIdx || S.shownGame !== P.meta.gameId) setSession({ shownIdx: st.qIdx, shownAt: Date.now(), shownGame: P.meta.gameId });
+    const own = st.dur * 1000 - (Date.now() - S.shownAt);
+    const hard = st.qStart + st.dur * 1000 + GRACE_MS - now;
+    return Math.min(own, hard) > 0 ? 'question' : 'counting';
+  }
+
+  function syncTick() {
+    if (!P || curScreen !== 'screen-game') return;
+    const st = P.state, me = P.players[UID];
+    if (!st || st.phase !== 'play' || !me) return;
+    if (!st.q || st.qIdx == null) {
+      if (SV.key !== 'wait') {
+        SV.key = 'wait';
+        $('timerRow').classList.add('hidden');
+        $('qTextDisplay').textContent = 'Ждём первый вопрос…';
+        $('optionsArea').innerHTML = ''; $('syncInfo').innerHTML = ''; $('syncBoard').innerHTML = ''; $('feedback').textContent = '';
+      }
+      return;
+    }
+    const i = st.qIdx, q = st.q, ph = syncPhase(st);
+    const hasRes = me.res && me.res.q === i;
+    const key = P.meta.gameId + ':' + i + ':' + ph + (ph === 'reveal' ? ':' + (hasRes ? 'r' : 'n') + ':' + Object.keys(P.players).length : '');
+    if (SV.key !== key) { SV.key = key; renderSyncPhase(st, q, i, ph); }
+    if (ph === 'lead') setText($('bigCount'), Math.max(1, Math.ceil((st.qStart - srvNow()) / 1000)));
+    else if (ph === 'question') {
+      const limitMs = st.dur * 1000, el = Date.now() - S.shownAt;
+      const left = Math.max(0, Math.min(limitMs - el, st.qStart + limitMs + GRACE_MS - srvNow()));
+      const sec = Math.ceil(left / 1000);
+      setText($('timerNum'), sec);
+      $('timerBar').style.width = Math.min(100, left / limitMs * 100) + '%';
+      setText($('ptsNow'), S.ansQ === i ? '✓' : pointsFor(el, st.dur) + ' б.');
+      timerClasses(sec, left / limitMs);
+    }
+  }
+
+  function renderSyncPhase(st, q, idx, ph) {
+    const answeredThis = S.ansQ === idx;
+    const total = P.meta.total || '?';
+    drawQuestionBase(q, idx, total);
+    $('liveScore').innerText = myScore();
+    $('timerRow').classList.toggle('hidden', ph !== 'question');
+    $('timerRow').classList.remove('warn', 'danger');
+    lastTickSec = null;
+    if (ph === 'lead') {
+      $('optionsArea').innerHTML = '';
+      $('syncInfo').innerHTML = '<div class="big-count" id="bigCount">…</div><p class="hint">Приготовьтесь — сейчас появятся варианты ответов</p>';
+      sfx('start');
+    } else if (ph === 'question') {
+      drawOptions(q, idx, answeredThis ? null : syncPick);
+      if (answeredThis) { markOptions(S.choice, null); setFeedback('', 'Ответ принят ✓<small>ждём остальных…</small>'); }
+    } else if (ph === 'counting') {
+      drawOptions(q, idx, null);
+      if (answeredThis) markOptions(S.choice, null);
+      setFeedback('', answeredThis ? '⏳ Подводим итоги…' : '⏰ Время вышло!<small>Подводим итоги…</small>');
+    } else {
+      renderSyncReveal(st, q, idx);
+    }
+  }
+
+  function renderSyncReveal(st, q, idx) {
+    drawOptions(q, idx, null);
+    const me = P.players[UID], res = me && me.res && me.res.q === idx ? me.res : null;
+    const picked = res ? (res.c >= 0 ? res.c : null) : (S.ansQ === idx ? S.choice : null);
+    markOptions(picked, st.reveal ? st.reveal.correctIdx : null);
+    $('liveScore').innerText = myScore();
+    if (res && S.revealed !== idx) {
+      setSession({ revealed: idx });
+      if (res.right) { sfx('right'); vib(60); } else { sfx('wrong'); vib([40, 40, 40]); }
+    }
+    if (!res) setFeedback('', '⏳ Подводим итоги…');
+    else if (res.right) setFeedback('ok', `✅ Верно! +${res.pts}` + rankLine());
+    else if (res.c >= 0) setFeedback('bad', '❌ Неверно<small>0 баллов</small>' + rankLine());
+    else setFeedback('bad', '⏰ Не успели<small>0 баллов</small>' + rankLine());
+    $('syncBoard').innerHTML = '<label class="field-label">🏆 Топ-3</label>' + renderBoard(playersArr(P.players), P.meta.total, UID, 'score', { sync: true, limit: 3 });
+  }
+
+  function syncPick(orig) {
+    const st = P.state;
+    if (!st || st.phase !== 'play' || st.sub !== 'question') return;
+    const idx = st.qIdx;
+    if (S.ansQ === idx || syncPhase(st) !== 'question') return;
+    const ms = Math.max(0, Math.round(Date.now() - S.shownAt));
+    setSession({ ansQ: idx, choice: orig });
+    document.querySelectorAll('#optionsArea .option-btn').forEach(b => b.disabled = true);
+    markOptions(orig, null);
+    setFeedback('', 'Ответ принят ✓<small>ждём остальных…</small>');
+    setText($('ptsNow'), '✓');
+    sfx('tap'); vib(30);
+    sendAnswer(idx, { c: orig, ms });
+  }
+
+  // ==================== РЕЗУЛЬТАТЫ ====================
+  function renderResults() {
+    showOnce('screen-results');
+    setSession({ screen: 'results' });
+    const players = playersArr(P.players), total = P.meta.total;
+    const me = players.find(p => p.id === UID);
+    setHTML($('myScore'), `Ваш результат: <b>${me ? me.score : 0}</b>` + (total ? `<br>Правильных ответов: <b>${me ? me.correct : 0}</b> из ${total}` : ''));
+    const done = P.state.phase === 'done' || (players.length && players.every(p => p.finished));
+    setHTML($('resultsWait'), done ? '' : '<div class="wait"><span class="dots"><span></span><span></span><span></span></span> Ждём, пока закончат остальные…</div>');
+    setHTML($('leaderboard'), renderBoards(players, total, UID, false, { sync: P.meta.mode === 'sync' }) || '<p class="empty">Пока нет результатов</p>');
+    if (done && S.celebrated !== P.meta.gameId) {
+      setSession({ celebrated: P.meta.gameId });
+      const rk = rankOf(players, UID);
+      if (rk && rk.rank <= 3 && rk.me.score > 0) { confetti(); sfx('win'); vib([80, 60, 80]); }
+    }
+  }
+</script>
+</body>
+</html>
