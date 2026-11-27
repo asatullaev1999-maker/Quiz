@@ -235,6 +235,11 @@
   .file-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 6px; }
   .file-row .btn { flex: 1; min-width: 150px; }
   .host-tools { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: -4px 0 6px; }
+  .adm-item { background: var(--soft); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+  .adm-item b { display: block; font-size: 16px; word-break: break-word; }
+  .adm-item small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .adm-btns { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; }
+  .menu-foot { text-align: center; margin: 14px 0 0; }
   .fatal { text-align: center; }
   .fatal p { color: var(--muted); font-size: 15px; line-height: 1.45; }
 </style>
@@ -279,7 +284,7 @@
       <button class="menu-tile btn-pink" onclick="openHostScreen()">
         <span class="ico">👑</span><span>Провести игру<small>Для создателя теста: запуск и топ игроков</small></span>
       </button>
-      <button class="menu-tile btn-main" onclick="openCreator()">
+      <button class="menu-tile btn-main" onclick="newCreator()">
         <span class="ico">✏️</span><span>Создать свой тест<small>Вопросы, картинки, варианты ответов</small></span>
       </button>
     </div>
@@ -291,11 +296,43 @@
         <a id="siteLink" target="_blank" rel="noopener"></a>
       </div>
     </div>
+    <p class="menu-foot"><button class="link-muted" onclick="openAdmin()">🔐 Админ-панель</button></p>
+  </div>
+
+  <!-- АДМИН-ПАНЕЛЬ -->
+  <div id="screen-admin" class="screen hidden">
+    <h2>🔐 Админ-панель</h2>
+    <div id="adminLogin" class="hidden">
+      <p class="hint" id="adminLoginHint">Введите код администратора</p>
+      <input type="password" id="adminCode" placeholder="Код администратора" autocomplete="off" onkeydown="if(event.key==='Enter') adminLogin()">
+      <input type="password" id="adminCode2" class="hidden" placeholder="Повторите код" autocomplete="off" onkeydown="if(event.key==='Enter') adminLogin()">
+      <button id="adminLoginBtn" class="btn btn-main" onclick="adminLogin()">Войти</button>
+    </div>
+    <div id="adminWait" class="wait"><span class="spinner dark"></span> Проверяем доступ…</div>
+    <div id="adminPanel" class="hidden">
+      <div class="panel-head" style="margin-top:6px">
+        <span class="panel-title">📚 Тесты <span id="adminCount"></span></span>
+        <button class="link-muted" onclick="adminRefresh()">🔄 обновить</button>
+      </div>
+      <input type="text" id="adminSearch" placeholder="🔍 Поиск по названию или автору" oninput="adminRenderTests()" autocomplete="off" style="margin-top:8px">
+      <div id="adminTests"></div>
+      <div class="panel-head" style="margin-top:18px">
+        <span class="panel-title">🚪 Комнаты <span id="adminRoomCount"></span></span>
+        <button class="link-danger" onclick="adminCleanRooms()">🧹 удалить старые</button>
+      </div>
+      <div id="adminRooms" style="margin-top:8px"></div>
+      <div class="host-tools" style="margin-top:16px">
+        <button class="link-muted" onclick="adminChangeCode()">🔑 сменить код администратора</button>
+        <button class="link-muted" onclick="adminLogout()">🚪 выйти из админки</button>
+      </div>
+    </div>
+    <button class="btn btn-ghost" onclick="goToMenu()">← Назад в меню</button>
   </div>
 
   <!-- СОЗДАНИЕ ТЕСТА -->
   <div id="screen-creator" class="screen hidden">
     <h2>Создатель теста</h2>
+    <p class="hint hidden" id="adminEditHint">🔐 Редактирование администратором. PIN можно оставить пустым — он не изменится.</p>
     <div class="file-row">
       <button class="btn btn-ghost btn-sm" onclick="$('fileInput').click()">📂 Загрузить из файла</button>
       <button class="btn btn-ghost btn-sm" onclick="downloadDraft()">💾 Скачать файл</button>
@@ -357,14 +394,16 @@
     <h2>👑 Ведущий</h2>
     <div id="hostPick">
       <p class="hint">Только создатель теста может открыть комнату и начать игру</p>
-      <label class="field-label" for="hostTestSelect">Ваш тест</label>
+      <label class="field-label" for="hostTestSelect">Ваш тест <span id="hostTestCount" style="text-transform:none;font-weight:500"></span></label>
+      <input type="text" id="hostSearch" placeholder="🔍 Поиск по названию или автору" oninput="filterTests()" autocomplete="off">
       <select id="hostTestSelect" onchange="fillHostPin()"><option value="">Загрузка тестов...</option></select>
       <label class="field-label" for="hostPinInput">PIN ведущего</label>
       <input type="password" id="hostPinInput" placeholder="PIN, который вы задали при создании" autocomplete="off"
              onkeydown="if(event.key==='Enter') hostOpenRoom()">
       <div class="host-tools">
         <button class="link-muted" onclick="hostEditTest()">✏️ изменить тест</button>
-        <button class="link-muted" onclick="hostDownloadTest()">💾 скачать файл теста</button>
+        <button class="link-muted" onclick="hostDownloadTest()">💾 скачать файл</button>
+        <button class="link-danger" onclick="hostDeleteTest()">🗑 удалить тест</button>
       </div>
       <label class="field-label">Режим игры</label>
       <div class="mode-pick">
@@ -574,6 +613,7 @@
     if (/PERMISSION_DENIED|permission/i.test(c)) return 'Нет доступа к базе — проверьте правила (Rules) в Firebase.';
     return 'Ошибка связи с базой. Проверьте интернет и попробуйте ещё раз.';
   }
+  const normName = n => String(n || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/ё/g, 'е');
   function qTimeOf(q) { const t = Number(q && q.time); return t > 0 ? t : DEFAULT_TIME; }
   function pointsFor(elapsedMs, limitSec) {
     const frac = Math.min(1, Math.max(0, elapsedMs / (limitSec * 1000)));
@@ -678,6 +718,7 @@
     if (!getName() && ['lobby', 'game', 'results', 'host'].includes(S.screen)) S = { screen: 'menu' };
     try {
       if (S.screen === 'creator') openCreator();
+      else if (S.screen === 'admin') openAdmin();
       else if (S.screen === 'host' && S.code && S.k && S.sid) await resumeHost();
       else if (['lobby', 'game', 'results'].includes(S.screen) && S.code) playerConnect(S.code);
       else if (S.screen === 'host') openHostScreen();
@@ -699,7 +740,7 @@
 
   function goToMenu() {
     leaveRoom();
-    setSession({ screen: 'menu', code: null, k: null, sid: null, gameId: null });
+    setSession({ screen: 'menu', code: null, k: null, sid: null, gameId: null, adminEdit: null });
     $('roomArea').classList.add('hidden');
     $('pickArea').classList.remove('hidden');
     showScreen('screen-menu');
@@ -725,6 +766,8 @@
     return { k, sid, test: t };
   }
 
+  // owners/{k} — секретный ключ владельца теста (из базы не читается), proofs — подтверждение, что ключ знаешь.
+  // Так менять и удалять тест может только тот, кто знает PIN.
   async function saveTestToDb(name, pin, creator, questions) {
     const k = await testKey(name), sid = await testSid(k, pin);
     const [idx, dat] = await Promise.all([db.ref('tests/' + k).get(), db.ref(`tdata/${k}/${sid}`).get()]);
@@ -732,24 +775,47 @@
     if (dat.exists()) token = dat.val().token;
     else if (idx.exists()) throw new Error('TAKEN');
     else token = randId();
-    await db.ref(`tdata/${k}/${sid}`).set({ name, creator, questions, token, updatedAt: TS });
-    await db.ref('tests/' + k).set({ name, creator, count: questions.length, updatedAt: TS, p: token });
+    await db.ref().update({
+      [`tdata/${k}/${sid}`]: { name, creator, questions, token, updatedAt: TS },
+      [`owners/${k}`]: token,
+      [`proofs/${k}/${token}`]: TS,
+      [`tests/${k}`]: { name, creator, count: questions.length, updatedAt: TS }
+    });
     return { k, sid };
   }
 
+  async function deleteTestFromDb(k, sid, token) {
+    // шаг 1 нужен для тестов, сохранённых до появления owners
+    await db.ref().update({ [`owners/${k}`]: token, [`proofs/${k}/${token}`]: TS });
+    await db.ref().update({ [`tdata/${k}/${sid}`]: null, [`tests/${k}`]: null, [`owners/${k}`]: null, [`proofs/${k}/${token}`]: TS });
+  }
+
+  let TESTS = [];
   async function loadTestsInto(select, preselectK) {
     select.innerHTML = '<option value="">Загрузка тестов...</option>';
     try {
       const s = await db.ref('tests').get();
-      const list = Object.entries(s.val() || {}).map(([k, v]) => Object.assign({ k }, v))
+      TESTS = Object.entries(s.val() || {}).map(([k, v]) => Object.assign({ k }, v)).filter(t => t.name)
         .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
-      if (!list.length) { select.innerHTML = '<option value="">Нет созданных тестов</option>'; return; }
-      select.innerHTML = list.map(t => `<option value="${esc(t.k)}">${esc(t.name)} · ${t.count || '?'} вопр.${t.creator ? ' · ' + esc(t.creator) : ''}</option>`).join('');
-      if (preselectK && list.some(t => t.k === preselectK)) select.value = preselectK;
+      filterTests(preselectK);
     } catch (e) {
       select.innerHTML = '<option value="">Ошибка загрузки тестов</option>';
       toast(fbError(e), 'err');
     }
+  }
+  // поиск теста в списке: по названию или автору, без учёта регистра
+  function filterTests(preselectK) {
+    const select = $('hostTestSelect'), q = normName($('hostSearch').value);
+    const keep = typeof preselectK === 'string' && preselectK ? preselectK : select.value;
+    const list = TESTS.filter(t => !q || normName(t.name).includes(q) || normName(t.creator).includes(q));
+    setText($('hostTestCount'), TESTS.length ? (q ? `· найдено ${list.length} из ${TESTS.length}` : `· всего ${TESTS.length}`) : '');
+    if (!TESTS.length) select.innerHTML = '<option value="">Нет созданных тестов</option>';
+    else if (!list.length) select.innerHTML = '<option value="">Ничего не найдено</option>';
+    else {
+      select.innerHTML = list.map(t => `<option value="${esc(t.k)}">${esc(t.name)} · ${t.count || '?'} вопр.${t.creator ? ' · ' + esc(t.creator) : ''}</option>`).join('');
+      if (keep && list.some(t => t.k === keep)) select.value = keep;
+    }
+    fillHostPin();
   }
 
   // ==================== КОНСТРУКТОР ====================
@@ -764,6 +830,7 @@
     saveDraft();
     toast(`Всем вопросам: ${t} сек ⏱`, 'ok');
   }
+  function newCreator() { setSession({ adminEdit: null }); openCreator(); }
   function openCreator() {
     if (!requireName()) return;
     leaveRoom();
@@ -778,10 +845,13 @@
       $('testIdInput').value = ''; $('testPinInput').value = '';
     }
     setSession({ screen: 'creator' });
+    $('adminEditHint').classList.toggle('hidden', !S.adminEdit);
+    $('testPinInput').placeholder = S.adminEdit ? 'Пусто — PIN останется прежним' : 'Минимум 4 символа — нужен, чтобы запускать игру';
     showScreen('screen-creator');
     renderCreatorPage();
   }
-  function openCreatorWith(name, pin, qs) {
+  function openCreatorWith(name, pin, qs, adminEdit = null) {
+    setSession({ adminEdit });
     pages = qs.map(q => ({ question: q.question || '', imageUrl: q.imageUrl || '', options: (q.options || []).slice(0, 6),
                            correct: Number(q.correct) || 0, time: qTimeOf(q) }));
     if (!pages.length) pages = [newPage()];
@@ -927,7 +997,7 @@
     const testId = $('testIdInput').value.trim();
     const pin = $('testPinInput').value.trim();
     if (!testId) { toast('Введите название теста!', 'err'); $('testIdInput').focus(); return; }
-    if (pin.length < 4) { toast('Придумайте PIN ведущего (минимум 4 символа)', 'err'); $('testPinInput').focus(); return; }
+    if (pin.length < 4 && !(S.adminEdit && !pin)) { toast('Придумайте PIN ведущего (минимум 4 символа)', 'err'); $('testPinInput').focus(); return; }
     for (let i = 0; i < pages.length; i++) {
       const p = pages[i];
       if (!p.question.trim() || p.options.filter(o => o.trim()).length < 2) {
@@ -947,6 +1017,15 @@
     const btn = $('saveTestBtn');
     setBtn(btn, true, 'Сохраняем…');
     try {
+      if (S.adminEdit) {
+        const r = await adminSaveTest(testId, pin, payload);
+        if (pin) { const pins = load(KEY.pins, {}); pins[r.k] = pin; store(KEY.pins, pins); }
+        forget(KEY.draft);
+        toast(`Тест сохранён (${payload.length} вопр.) ✅`, 'ok');
+        setSession({ adminEdit: null });
+        openAdmin();
+        return;
+      }
       const r = await saveTestToDb(testId, pin, getName(), payload);
       const pins = load(KEY.pins, {}); pins[r.k] = pin; store(KEY.pins, pins);
       forget(KEY.draft);
@@ -954,6 +1033,7 @@
       openHostScreen(r.k);
     } catch (e) {
       if (e.message === 'TAKEN') toast(`Тест «${testId}» уже есть, и у него другой PIN. Введите его PIN или выберите другое название.`, 'err');
+      else if (e.message === 'NEEDPIN') toast('При смене названия задайте PIN для теста', 'err');
       else toast(fbError(e), 'err');
     } finally {
       setBtn(btn, false, '🚀 Сохранить тест');
@@ -1029,7 +1109,17 @@
     if (iQ >= 0 && iOpt >= 0 && iCor >= 0) {
       // старая таблица: testId | order | question | options | correct | imageUrl | creator | pin | time
       const iT = col(/^testid$/), iImg = col(/^imageurl$/), iPin = col(/^pin$/), iTime = col(/^time$/), iOrd = col(/^order$/);
-      const body = rows.slice(1);
+      let body = rows.slice(1);
+      // в старой таблице все тесты вместе — спрашиваем, какой загрузить
+      if (iT >= 0) {
+        const ids = [...new Set(body.map(r => r[iT]).filter(Boolean))];
+        if (ids.length > 1) {
+          const ans = prompt('В файле несколько тестов:\n' + ids.map((t, i) => `${i + 1}. ${t}`).join('\n') + '\n\nВведите номер теста:', '1');
+          const pick = ids[(parseInt(ans, 10) || 0) - 1];
+          if (!pick) return { name, pin, qs: [] };
+          body = body.filter(r => r[iT] === pick);
+        }
+      }
       if (iOrd >= 0) body.sort((a, b) => Number(a[iOrd]) - Number(b[iOrd]));
       body.forEach(r => {
         let opts;
@@ -1038,7 +1128,9 @@
         if (!r[iQ] || opts.length < 2) return;
         if (iT >= 0 && r[iT] && !qs.length) name = r[iT];
         if (iPin >= 0 && r[iPin] && !pin) pin = r[iPin];
-        qs.push({ question: r[iQ], options: opts, correct: Math.min(opts.length - 1, Math.max(0, parseInt(r[iCor], 10) || 0)),
+        let cor = parseInt(r[iCor], 10);
+        if (isNaN(cor)) cor = Math.max(0, opts.indexOf(String(r[iCor] || '').trim())); // верный ответ записан текстом
+        qs.push({ question: r[iQ], options: opts, correct: Math.min(opts.length - 1, Math.max(0, cor)),
                   imageUrl: iImg >= 0 ? normalizeImageUrl(r[iImg] || '') : '', time: (iTime >= 0 && parseInt(r[iTime], 10)) || DEFAULT_TIME });
       });
       return { name, pin, qs };
@@ -1072,7 +1164,7 @@
       const curName = $('testIdInput').value.trim(), curPin = $('testPinInput').value.trim();
       const hasWork = pages.some(p => p.question.trim());
       if (hasWork && !confirm(`Заменить текущие вопросы на ${qs.length} вопр. из файла?`)) return;
-      openCreatorWith(r.name || curName, r.pin || curPin, qs);
+      openCreatorWith(r.name || curName, r.pin || curPin, qs, S.adminEdit || null);
       toast(`Загружено вопросов: ${qs.length}` + (bad.length ? `. Пропущены (нет верного ответа или вариантов): ${bad.join(', ')}` : '') + '. Проверьте и нажмите «Сохранить тест».', bad.length ? '' : 'ok');
     };
     reader.onerror = () => toast('Не удалось прочитать файл', 'err');
@@ -1121,11 +1213,236 @@
   }
   async function hostEditTest() {
     const r = await hostGetTestWithPin();
-    if (r) openCreatorWith(r.test.name, r.pin, r.test.questions);
+    if (r) openCreatorWith(r.test.name, r.pin, r.test.questions, null);
+  }
+  async function hostDeleteTest() {
+    const r = await hostGetTestWithPin();
+    if (!r) return;
+    if (!confirm(`Удалить тест «${r.test.name}» (${r.test.questions.length} вопр.) навсегда?\n\nСовет: сначала можно «скачать файл», чтобы была копия.`)) return;
+    try {
+      await deleteTestFromDb(r.k, r.sid, r.test.token);
+      const pins = load(KEY.pins, {}); delete pins[r.k]; store(KEY.pins, pins);
+      toast(`Тест «${r.test.name}» удалён`, 'ok');
+      $('hostPinInput').value = '';
+      await loadTestsInto($('hostTestSelect'));
+    } catch (e) { toast(fbError(e), 'err'); }
   }
   async function hostDownloadTest() {
     const r = await hostGetTestWithPin();
     if (r) downloadText(r.test.name, testToText(r.test.name, r.pin, r.test.questions));
+  }
+
+  // ==================== АДМИН-ПАНЕЛЬ ====================
+  // Код администратора не хранится в открытом виде: в базе лежит только его хэш, и прочитать его нельзя.
+  // Войти = доказать базе, что знаешь код; после этого этот браузер записан в admins и получает полный доступ.
+  let ADM = { tests: [], rooms: [], first: false };
+  const adminHash = code => sha256hex('marmalade-admin|' + String(code).trim());
+  const isPerm = e => /permission/i.test((e && (e.code || e.message)) || '');
+
+  async function openAdmin() {
+    leaveRoom();
+    setSession({ screen: 'admin' });
+    showScreen('screen-admin');
+    $('adminLogin').classList.add('hidden'); $('adminPanel').classList.add('hidden'); $('adminWait').classList.remove('hidden');
+    try {
+      const [me, set] = await Promise.all([db.ref('admins/' + UID).get(), db.ref('config/adminSet').get()]);
+      $('adminWait').classList.add('hidden');
+      if (me.exists()) { showAdminPanel(); return; }
+      ADM.first = !set.val();
+      $('adminLogin').classList.remove('hidden');
+      $('adminCode2').classList.toggle('hidden', !ADM.first);
+      $('adminLoginHint').textContent = ADM.first
+        ? 'Первый вход: придумайте код администратора (минимум 6 символов). Запомните его — восстановить нельзя.'
+        : 'Введите код администратора';
+      setBtn($('adminLoginBtn'), false, ADM.first ? 'Сохранить код и войти' : 'Войти');
+      $('adminCode').focus();
+    } catch (e) { $('adminWait').classList.add('hidden'); toast(fbError(e), 'err'); }
+  }
+
+  async function adminLogin() {
+    const code = $('adminCode').value.trim(), btn = $('adminLoginBtn'), label = ADM.first ? 'Сохранить код и войти' : 'Войти';
+    if (code.length < 6) { toast('Код — минимум 6 символов', 'err'); return; }
+    if (ADM.first && code !== $('adminCode2').value.trim()) { toast('Коды не совпадают', 'err'); return; }
+    setBtn(btn, true, 'Проверяем…');
+    try {
+      const h = await adminHash(code);
+      if (ADM.first) await db.ref().update({ adminKey: h, 'config/adminSet': true });
+      await db.ref().update({ [`admins/${UID}`]: { at: TS, name: getName() || '' }, [`adminProofs/${h}`]: TS });
+      $('adminCode').value = ''; $('adminCode2').value = '';
+      toast('Вы вошли как администратор', 'ok');
+      showAdminPanel();
+    } catch (e) {
+      toast(isPerm(e) ? 'Неверный код администратора' : fbError(e), 'err');
+    } finally { setBtn(btn, false, label); }
+  }
+
+  function showAdminPanel() {
+    $('adminLogin').classList.add('hidden');
+    $('adminPanel').classList.remove('hidden');
+    adminRefresh();
+  }
+
+  async function adminLogout() {
+    try { await db.ref('admins/' + UID).remove(); } catch (e) {}
+    toast('Вы вышли из админ-панели');
+    openAdmin();
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function adminRefresh() {
+    setHTML($('adminTests'), '<div class="wait"><span class="spinner dark"></span></div>');
+    try {
+      const [t, r] = await Promise.all([db.ref('tests').get(), db.ref('rooms').get()]);
+      ADM.tests = Object.entries(t.val() || {}).map(([k, v]) => Object.assign({ k }, v))
+        .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
+      ADM.rooms = Object.entries(r.val() || {}).map(([code, v]) => ({ code, meta: (v && v.meta) || {}, state: (v && v.state) || {},
+        players: Object.keys((v && v.players) || {}).length, online: Object.keys((v && v.online) || {}).length }))
+        .sort((a, b) => (b.meta.created || 0) - (a.meta.created || 0));
+      adminRenderTests(); adminRenderRooms();
+    } catch (e) {
+      if (isPerm(e)) { toast('Доступ администратора закрыт — войдите снова', 'err'); openAdmin(); }
+      else toast(fbError(e), 'err');
+    }
+  }
+
+  function adminRenderTests() {
+    const q = normName($('adminSearch').value);
+    const list = ADM.tests.filter(t => !q || normName(t.name).includes(q) || normName(t.creator).includes(q));
+    setText($('adminCount'), q ? `· найдено ${list.length} из ${ADM.tests.length}` : `· ${ADM.tests.length}`);
+    setHTML($('adminTests'), list.length ? list.map(t => `
+      <div class="adm-item">
+        <b>${esc(t.name || '(без названия)')}</b>
+        <small>${t.count || '?'} вопр.${t.creator ? ' · ' + esc(t.creator) : ''}${t.updatedAt ? ' · ' + fmtDate(t.updatedAt) : ''}</small>
+        <div class="adm-btns">
+          <button class="link-muted" data-k="${esc(t.k)}" onclick="adminEdit(this.dataset.k)">✏️ изменить</button>
+          <button class="link-muted" data-k="${esc(t.k)}" onclick="adminDownload(this.dataset.k)">💾 файл</button>
+          <button class="link-muted" data-k="${esc(t.k)}" onclick="adminNewPin(this.dataset.k)">🔑 новый PIN</button>
+          <button class="link-danger" data-k="${esc(t.k)}" onclick="adminDelete(this.dataset.k)">🗑 удалить</button>
+        </div>
+      </div>`).join('') : `<p class="empty">${ADM.tests.length ? 'Ничего не найдено' : 'Тестов пока нет'}</p>`);
+  }
+
+  function adminRenderRooms() {
+    const old = Date.now() - 12 * 3600 * 1000;
+    setText($('adminRoomCount'), `· ${ADM.rooms.length}`);
+    setHTML($('adminRooms'), ADM.rooms.length ? ADM.rooms.map(r => {
+      const ph = r.state.phase === 'play' ? 'идёт игра' : r.state.phase === 'done' ? 'игра окончена' : 'набор игроков';
+      return `<div class="adm-item">
+        <b>${esc(r.code)} · ${esc(r.meta.test || '?')}</b>
+        <small>${r.meta.mode === 'sync' ? '🎬 все вместе' : '🏃 в своём темпе'} · ${ph} · игроков ${r.players} (на связи ${r.online})${r.meta.created ? ' · создана ' + fmtDate(r.meta.created) : ''}${(r.meta.created || 0) < old ? ' · старая' : ''}</small>
+        <div class="adm-btns"><button class="link-danger" data-c="${esc(r.code)}" onclick="adminCloseRoom(this.dataset.c)">✕ закрыть комнату</button></div>
+      </div>`;
+    }).join('') : '<p class="empty">Открытых комнат нет</p>');
+  }
+
+  async function adminLoadTest(k) {
+    const s = await db.ref('tdata/' + k).get();
+    const all = Object.entries(s.val() || {}).sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0));
+    if (!all.length) return null;
+    const [sid, t] = all[0];
+    t.questions = toArr(t.questions).map(q => Object.assign({}, q, { options: toArr(q.options) }));
+    return { k, sid, test: t };
+  }
+  async function adminGet(k) {
+    try {
+      const r = await adminLoadTest(k);
+      if (!r) toast('У этого теста нет вопросов в базе — его можно только удалить', 'err');
+      return r;
+    } catch (e) { toast(isPerm(e) ? 'Нет доступа администратора — войдите снова' : fbError(e), 'err'); return null; }
+  }
+
+  async function adminEdit(k) {
+    const r = await adminGet(k);
+    if (r) openCreatorWith(r.test.name, '', r.test.questions, { k: r.k, sid: r.sid, token: r.test.token || randId(), creator: r.test.creator || '' });
+  }
+
+  async function adminSaveTest(name, pin, questions) {
+    const ed = S.adminEdit, k = await testKey(name);
+    if (k !== ed.k && !pin) throw new Error('NEEDPIN');
+    if (k !== ed.k && (await db.ref('tests/' + k).get()).exists()) throw new Error('TAKEN');
+    const sid = pin ? await testSid(k, pin) : ed.sid;
+    const token = k === ed.k ? ed.token : randId();
+    const creator = ed.creator || getName();
+    const upd = {
+      [`tdata/${k}/${sid}`]: { name, creator, questions, token, updatedAt: TS },
+      [`owners/${k}`]: token,
+      [`proofs/${k}/${token}`]: TS,
+      [`tests/${k}`]: { name, creator, count: questions.length, updatedAt: TS }
+    };
+    if (k !== ed.k) { upd[`tdata/${ed.k}`] = null; upd[`tests/${ed.k}`] = null; upd[`owners/${ed.k}`] = null; }
+    else if (sid !== ed.sid) upd[`tdata/${k}/${ed.sid}`] = null;
+    await db.ref().update(upd);
+    return { k, sid };
+  }
+
+  async function adminDownload(k) {
+    const r = await adminGet(k);
+    if (r) downloadText(r.test.name, testToText(r.test.name, '', r.test.questions));
+  }
+
+  async function adminNewPin(k) {
+    const r = await adminGet(k);
+    if (!r) return;
+    const pin = (prompt(`Новый PIN для теста «${r.test.name}» (минимум 4 символа):`) || '').trim();
+    if (!pin) return;
+    if (pin.length < 4) { toast('PIN — минимум 4 символа', 'err'); return; }
+    try {
+      const sid = await testSid(k, pin);
+      const t = Object.assign({}, r.test, { updatedAt: TS });
+      const upd = { [`tdata/${k}/${sid}`]: t };
+      if (sid !== r.sid) upd[`tdata/${k}/${r.sid}`] = null;
+      await db.ref().update(upd);
+      const pins = load(KEY.pins, {}); pins[k] = pin; store(KEY.pins, pins);
+      toast(`PIN теста «${r.test.name}» изменён`, 'ok');
+    } catch (e) { toast(fbError(e), 'err'); }
+  }
+
+  async function adminDelete(k) {
+    const t = ADM.tests.find(x => x.k === k);
+    if (!confirm(`Удалить тест «${t ? t.name : k}» навсегда?\n\nСовет: сначала можно скачать файл, чтобы была копия.`)) return;
+    try {
+      await db.ref().update({ [`tdata/${k}`]: null, [`tests/${k}`]: null, [`owners/${k}`]: null });
+      const pins = load(KEY.pins, {}); delete pins[k]; store(KEY.pins, pins);
+      toast('Тест удалён', 'ok');
+      adminRefresh();
+    } catch (e) { toast(fbError(e), 'err'); }
+  }
+
+  async function adminCloseRoom(code) {
+    if (!confirm(`Закрыть комнату ${code}? Игроков в ней выкинет в меню.`)) return;
+    try { await db.ref('rooms/' + code).remove(); toast('Комната закрыта', 'ok'); adminRefresh(); }
+    catch (e) { toast(fbError(e), 'err'); }
+  }
+
+  async function adminCleanRooms() {
+    const old = Date.now() - 12 * 3600 * 1000;
+    const list = ADM.rooms.filter(r => (r.meta.created || 0) < old);
+    if (!list.length) { toast('Старых комнат (больше 12 часов) нет'); return; }
+    if (!confirm(`Удалить старые комнаты: ${list.length} шт.?`)) return;
+    try {
+      const upd = {}; list.forEach(r => upd['rooms/' + r.code] = null);
+      await db.ref().update(upd);
+      toast(`Удалено комнат: ${list.length}`, 'ok'); adminRefresh();
+    } catch (e) { toast(fbError(e), 'err'); }
+  }
+
+  async function adminChangeCode() {
+    const oldCode = (prompt('Текущий код администратора:') || '').trim();
+    if (!oldCode) return;
+    const code = (prompt('Новый код (минимум 6 символов):') || '').trim();
+    if (!code) return;
+    if (code.length < 6) { toast('Код — минимум 6 символов', 'err'); return; }
+    if (code !== (prompt('Повторите новый код:') || '').trim()) { toast('Коды не совпадают', 'err'); return; }
+    try {
+      const oh = await adminHash(oldCode), nh = await adminHash(code);
+      await db.ref().update({ adminKey: nh, [`adminProofs/${oh}`]: TS });
+      toast('Код администратора изменён', 'ok');
+    } catch (e) { toast(isPerm(e) ? 'Текущий код неверный' : fbError(e), 'err'); }
   }
 
   // ==================== ТАБЛИЦЫ ЛИДЕРОВ ====================
@@ -1267,7 +1584,6 @@
     startTick(hostTick, 250);
   }
   const hostRef = path => db.ref(`rooms/${H.code}` + (path ? '/' + path : ''));
-  const normName = n => String(n || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
   // Ведущий принимает игроков: одинаковые имена не путаются, вернувшийся игрок получает свои баллы обратно
   function hostProcessJoins() {
